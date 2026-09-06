@@ -2,6 +2,7 @@
 SupplyShield - Dynamic Sandbox Test Suite
 Detonates benign, credential-stealing, and hanging backdoor scripts inside the isolated sandbox to test watchdog termination and canary detection.
 """
+import os
 import sys
 import io
 from engine.sandbox import sandbox_engine
@@ -9,13 +10,15 @@ from engine.sandbox import sandbox_engine
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def test_dynamic_sandbox():
     print("=" * 70)
     print(" [SUPPLYSHIELD] DYNAMIC DETONATION SANDBOX - TEST SUITE")
     print("=" * 70)
 
     # Test 1: Safe Math Package
-    with open("samples/safe_math_pkg.py", "r", encoding="utf-8") as f:
+    with open(os.path.join(BASE_DIR, "samples", "safe_math_pkg.py"), "r", encoding="utf-8") as f:
         safe_code = f.read()
     
     print("\n[+] Detonating Sample 1: Safe Math Package...")
@@ -27,7 +30,7 @@ def test_dynamic_sandbox():
     print(f"    - Findings: {len(res_safe['dynamic_findings'])}")
 
     # Test 2: Credential Stealer (Hits .ssh & .env and tries network socket)
-    with open("samples/credential_stealer.py", "r", encoding="utf-8") as f:
+    with open(os.path.join(BASE_DIR, "samples", "credential_stealer.py"), "r", encoding="utf-8") as f:
         stealer_code = f.read() + "\nexfiltrate_credentials()"
 
     print("\n[+] Detonating Sample 2: Credential Stealer Backdoor...")

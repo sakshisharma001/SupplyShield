@@ -3,6 +3,7 @@ SupplyShield - End-to-End Pipeline Test Suite (Day 3)
 Executes the full pipeline: AST Analysis + Sandbox Detonation + Risk Assessment + SQLite Storage across all 3 test packages.
 """
 
+import os
 import sys
 import io
 import json
@@ -14,11 +15,13 @@ from database import save_scan_report, get_recent_scans
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def run_end_to_end_test():
     samples = [
-        ("Safe Math Package", "samples/safe_math_pkg.py"),
-        ("Obfuscated Backdoor", "samples/obfuscated_backdoor.py"),
-        ("Credential Stealer", "samples/credential_stealer.py")
+        ("Safe Math Package", os.path.join(BASE_DIR, "samples", "safe_math_pkg.py")),
+        ("Obfuscated Backdoor", os.path.join(BASE_DIR, "samples", "obfuscated_backdoor.py")),
+        ("Credential Stealer", os.path.join(BASE_DIR, "samples", "credential_stealer.py"))
     ]
     
     print("=" * 75)

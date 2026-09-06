@@ -2,6 +2,7 @@
 SupplyShield - AST Engine Test Suite
 Runs the AST Static Engine against benign, obfuscated, and credential-stealer samples to verify detection accuracy.
 """
+import os
 import sys
 import io
 from engine.ast_analyzer import analyze_source_ast
@@ -10,11 +11,13 @@ from engine.ast_analyzer import analyze_source_ast
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def test_samples():
     samples = [
-        ("Safe Math Package", "samples/safe_math_pkg.py"),
-        ("Obfuscated Backdoor", "samples/obfuscated_backdoor.py"),
-        ("Credential Stealer", "samples/credential_stealer.py"),
+        ("Safe Math Package", os.path.join(BASE_DIR, "samples", "safe_math_pkg.py")),
+        ("Obfuscated Backdoor", os.path.join(BASE_DIR, "samples", "obfuscated_backdoor.py")),
+        ("Credential Stealer", os.path.join(BASE_DIR, "samples", "credential_stealer.py")),
     ]
     
     print("=" * 70)
