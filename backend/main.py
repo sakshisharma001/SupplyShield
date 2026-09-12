@@ -100,27 +100,34 @@ async def websocket_telemetry_endpoint(websocket: WebSocket):
         ws_manager.disconnect(websocket)
 
 
-# --- Root Route ---
+from fastapi.staticfiles import StaticFiles
 
-@app.get("/", tags=["General"])
-async def root():
-    """Root endpoint verifying gateway uptime and API documentation access."""
-    return {
-        "service": "SupplyShield Security Gateway",
-        "status": "ONLINE",
-        "version": "1.0.0",
-        "docs_url": "/docs",
-        "websocket_url": "/ws/telemetry",
-        "endpoints": [
-            "POST /api/scan/code",
-            "POST /api/scan/package",
-            "GET /api/history",
-            "GET /api/scan/{scan_id}",
-            "GET /api/health"
-        ]
-    }
+# --- Static Frontend Dashboard Mounting ---
+FRONTEND_DIR = os.path.join(CURRENT_DIR, "..", "frontend")
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/dashboard", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+    # Also mount at root for instant access if HTML file exists
+    @app.get("/api/info", tags=["General"])
+    async def api_info():
+        return {
+            "service": "SupplyShield Security Gateway",
+            "status": "ONLINE",
+            "version": "1.0.0",
+            "docs_url": "/docs",
+            "websocket_url": "/ws/telemetry"
+        }
+    
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="root_frontend")
+else:
+    @app.get("/", tags=["General"])
+    async def root():
+        return {
+            "service": "SupplyShield Security Gateway",
+            "status": "ONLINE",
+            "version": "1.0.0"
+        }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host=settings.API_HOST, port=settings.API_PORT, reload=True)
+    uvicorn.run("main:app", host=settings.HOST, port=settings.PORT, reload=True)

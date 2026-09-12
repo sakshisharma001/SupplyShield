@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupplyShield — Cyber Security Audit & Detonation Engine</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+    <!-- Cyber Background Glow Gradients -->
+    <div class="glow-bg glow-cyan"></div>
+    <div class="glow-bg glow-purple"></div>
+
+    <div class="app-container">
+        <!-- Navigation Header -->
+        <header class="navbar glass-card">
+            <div class="brand-group">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">SUPPLY<span class="highlight">SHIELD</span></span>
+                    <span class="brand-tagline">Autonomous Dependency Detonation & AST Engine</span>
+                </div>
+            </div>
+
+            <div class="header-status-group">
+                <div class="status-badge" id="backend-status">
+                    <span class="pulse-dot"></span>
+                    <span class="status-text">GATEWAY ONLINE</span>
+                </div>
+                <div class="status-badge ws-badge" id="ws-status">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span class="ws-status-text">WS LIVE</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout Grid -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Column: Input Scanner & Code Detonator -->
+            <section class="panel-card glass-card">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-microchip"></i> Dependency Package Inspector</h3>
+                    <span class="panel-subtitle">Upload PyPI file or paste Python script</span>
+                </div>
+
+                <!-- Input Mode Tabs -->
+                <div class="tab-group">
+                    <button class="tab-btn active" id="tab-code-btn" onclick="switchTab('code')">
+                        <i class="fa-solid fa-code"></i> Code Snippet
+                    </button>
+                    <button class="tab-btn" id="tab-file-btn" onclick="switchTab('file')">
+                        <i class="fa-solid fa-file-arrow-up"></i> Upload .py Package
+                    </button>
+                </div>
+
+                <!-- Tab 1: Code Input Area -->
+                <div class="tab-content" id="tab-code">
+                    <div class="code-editor-wrapper">
+                        <div class="editor-header">
+                            <span class="file-label"><i class="fa-brands fa-python"></i> input_sample.py</span>
+                            <div class="preset-buttons">
+                                <button class="btn-preset btn-preset-safe" onclick="loadPreset('safe')">
+                                    <i class="fa-solid fa-check"></i> Safe Math
+                                </button>
+                                <button class="btn-preset btn-preset-backdoor" onclick="loadPreset('backdoor')">
+                                    <i class="fa-solid fa-bug"></i> Backdoor
+                                </button>
+                                <button class="btn-preset btn-preset-stealer" onclick="loadPreset('stealer')">
+                                    <i class="fa-solid fa-user-secret"></i> Credential Stealer
+                                </button>
+                            </div>
+                        </div>
+                        <textarea id="code-input" class="code-textarea" spellcheck="false" placeholder="# Paste Python dependency code here to inspect..."></textarea>
+                    </div>
+
+                    <button class="btn-primary" id="scan-code-btn" onclick="scanCode()">
+                        <i class="fa-solid fa-radar"></i> DETONATE & SCAN CODE
+                    </button>
+                </div>
+
+                <!-- Tab 2: File Upload Drag & Drop Area -->
+                <div class="tab-content hidden" id="tab-file">
+                    <div class="drop-zone" id="drop-zone" onclick="triggerFileInput()">
+                        <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                        <div class="drop-text">
+                            <strong>Drag & Drop .py Package File Here</strong>
+                            <span>or click to browse local files</span>
+                        </div>
+                        <input type="file" id="file-input" accept=".py" class="hidden-file-input" onchange="handleFileSelected(event)">
+                        <div id="file-selected-name" class="file-selected-info hidden"></div>
+                    </div>
+
+                    <button class="btn-primary" id="scan-file-btn" onclick="scanFile()" disabled>
+                        <i class="fa-solid fa-shield-virus"></i> DETONATE & SCAN FILE
+                    </button>
+                </div>
+            </section>
+
+            <!-- Right Column: Live Detonation Terminal & Risk Score Gauge -->
+            <section class="panel-card glass-card">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-gauge-high"></i> Threat Assessment & Telemetry</h3>
+                    <span class="panel-subtitle">Real-time risk scoring and MITRE ATT&CK mapping</span>
+                </div>
+
+                <!-- Risk Gauge & Verdict Card -->
+                <div class="verdict-summary-card" id="verdict-card">
+                    <div class="gauge-container">
+                        <svg class="gauge-svg" viewBox="0 0 120 120">
+                            <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+                            <circle class="gauge-progress" id="gauge-circle" cx="60" cy="60" r="50"></circle>
+                        </svg>
+                        <div class="gauge-value-group">
+                            <span class="gauge-score" id="risk-score-display">0</span>
+                            <span class="gauge-max">/100</span>
+                        </div>
+                    </div>
+
+                    <div class="verdict-details">
+                        <div class="verdict-badge-wrapper">
+                            <span class="verdict-badge verdict-clean" id="verdict-badge">IDLE</span>
+                            <span class="slsa-badge" id="slsa-badge">SLSA Level 4</span>
+                        </div>
+                        <div class="verdict-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">AST Scan Time:</span>
+                                <span class="meta-value" id="ast-time-display">--</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Sandbox Time:</span>
+                                <span class="meta-value" id="sandbox-time-display">--</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Build Decision:</span>
+                                <span class="meta-value decision-text" id="decision-display">WAITING</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live WebSocket Terminal Feed -->
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                        <span class="terminal-title"><i class="fa-solid fa-terminal"></i> LIVE SOC TELEMETRY FEED</span>
+                        <button class="btn-clear-term" onclick="clearTerminal()" title="Clear Terminal Logs">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <div class="terminal-body" id="terminal-output">
+                        <div class="term-line sys-line">[SYSTEM] SupplyShield Gateway ready. Waiting for scan detonation payload...</div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Threat Findings & MITRE ATT&CK Matrix Panel -->
+        <section class="panel-card glass-card full-width-panel margin-top-lg">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> MITRE ATT&CK Threat Findings & Evidence Ledger</h3>
+                <span class="panel-subtitle">Parsed AST taint traces and dynamic sandbox hooks</span>
+            </div>
+
+            <div class="findings-grid" id="findings-container">
+                <div class="empty-state">
+                    <i class="fa-solid fa-shield-heart"></i>
+                    <p>No active threats detected yet. Run a scan on code or package files to view AST taint paths and MITRE ATT&CK findings.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Audit History Ledger Table -->
+        <section class="panel-card glass-card full-width-panel margin-top-lg">
+            <div class="panel-header flex-between">
+                <div>
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Persistent Audit Scan History</h3>
+                    <span class="panel-subtitle">Stored SQLite audit trail and historical threat decisions</span>
+                </div>
+                <button class="btn-secondary" onclick="loadScanHistory()">
+                    <i class="fa-solid fa-arrows-rotate"></i> Refresh Audit History
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>ID / Timestamp</th>
+                            <th>Target / File</th>
+                            <th>Risk Score</th>
+                            <th>Verdict</th>
+                            <th>SLSA Tier</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Loading persistent scan audit history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Modal Drawer for Full Scan Report View -->
+        <div class="modal-backdrop hidden" id="report-modal">
+            <div class="modal-card glass-card">
+                <div class="modal-header">
+                    <h4><i class="fa-solid fa-file-contract"></i> Detailed Security Audit Report</h4>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modal-report-content">
+                    <!-- Dynamic Report Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>SupplyShield Security Gateway &bull; Designed by <strong>Team Rezzolver</strong> (Sakshi Sharma & Ravish Gupta) &bull; Built with FastAPI, AST Static Engine & Ephemeral Sandbox</p>
+        </footer>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+</html>
