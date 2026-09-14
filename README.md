@@ -41,6 +41,11 @@
 - Real-time WebSocket terminal feed
 - Risk score gauge and findings table
 
+### ✅ Executive Security Audit Reports & Export Engine
+- **Report Generator** — Produces standardized JSON compliance reports and standalone, print-ready HTML audit reports
+- **Export Endpoints** — REST APIs (`GET /api/scan/{id}/report` and `GET /api/scan/{id}/report/html`) for CI/CD integration and PDF printing
+- **Malware Preset Suite** — 7 pre-configured attack samples (reverse shell, DNS tunneling, typosquatting, cryptominer, obfuscated backdoor)
+
 ## 🗺️ Roadmap
 
 | Phase | Feature | Status |
@@ -51,7 +56,7 @@
 | Phase 4 | REST API & WebSocket Telemetry | ✅ Done |
 | Phase 5 | SOC Security Dashboard (Frontend) | ✅ Done |
 | Phase 6 | Scan History & Audit Reports | ✅ Done |
-| Phase 7 | Advanced Threat Intelligence | 🔄 In Progress |
+| Phase 7 | Executive Audit Report Engine & Export APIs | ✅ Done |
 | Phase 8 | CI/CD Pipeline Integration | 📋 Planned |
 | Phase 9 | Multi-Language Support | 📋 Planned |
 | Phase 10 | Cloud Deployment & Scaling | 📋 Planned |

@@ -11,6 +11,7 @@ const WS_BASE_URL = "ws://127.0.0.1:8000/ws/telemetry";
 let selectedFile = null;
 let ws = null;
 let currentTab = "code";
+let currentScanId = null;
 
 // Preset Code Samples
 const PRESETS = {
@@ -525,18 +526,31 @@ async function viewScanDetails(id) {
     try {
         const res = await fetch(`${API_BASE_URL}/api/scan/${id}`);
         const data = await res.json();
+        const scanObj = data.report || data;
 
         const content = document.getElementById("modal-report-content");
         content.innerHTML = `
             <div style="font-family: var(--font-mono); line-height: 1.6;">
-                <p><strong>Scan Audit ID:</strong> #${data.id}</p>
-                <p><strong>Target Package:</strong> <code>${data.target_file}</code></p>
-                <p><strong>Timestamp:</strong> ${data.created_at}</p>
-                <p><strong>Risk Score:</strong> <span style="font-size: 18px; font-weight: 800;">${data.risk_score}/100</span></p>
-                <p><strong>Verdict:</strong> ${data.verdict}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <p style="margin:0;"><strong>Scan Audit ID:</strong> #${id}</p>
+                        <p style="margin:0;"><strong>Target Package:</strong> <code>${scanObj.target_file || scanObj.package_name || "snippet.py"}</code></p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="window.open('${API_BASE_URL}/api/scan/${id}/report/html', '_blank')">
+                            <i class="fa-solid fa-file-pdf"></i> HTML Report
+                        </button>
+                        <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="window.open('${API_BASE_URL}/api/scan/${id}/report', '_blank')">
+                            <i class="fa-solid fa-code"></i> JSON Report
+                        </button>
+                    </div>
+                </div>
+                <p><strong>Timestamp:</strong> ${scanObj.created_at || new Date().toISOString()}</p>
+                <p><strong>Risk Score:</strong> <span style="font-size: 18px; font-weight: 800;">${scanObj.risk_score || scanObj.composite_risk_score || 0}/100</span></p>
+                <p><strong>Verdict:</strong> ${scanObj.verdict || "UNKNOWN"}</p>
                 <hr style="border-color: var(--border-glass); margin: 14px 0;">
-                <h5>Findings Breakdown (${data.findings ? data.findings.length : 0}):</h5>
-                <pre style="background: #050810; padding: 14px; border-radius: 8px; font-size: 11px; color: var(--color-cyan); overflow-x: auto;">${JSON.stringify(data.findings, null, 2)}</pre>
+                <h5>Findings Breakdown (${scanObj.findings ? scanObj.findings.length : 0}):</h5>
+                <pre style="background: #050810; padding: 14px; border-radius: 8px; font-size: 11px; color: var(--color-cyan); overflow-x: auto;">${JSON.stringify(scanObj.findings || [], null, 2)}</pre>
             </div>
         `;
         document.getElementById("report-modal").classList.remove("hidden");

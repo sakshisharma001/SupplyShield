@@ -87,11 +87,13 @@ def get_scan_by_id(scan_id: int) -> Optional[Dict[str, Any]]:
     """Retrieves the complete report JSON for a specific scan ID."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT report_json FROM scan_history WHERE id = ?", (scan_id,))
+    cursor.execute("SELECT id, report_json FROM scan_history WHERE id = ?", (scan_id,))
     row = cursor.fetchone()
     conn.close()
     if row:
-        return json.loads(row["report_json"])
+        data = json.loads(row["report_json"])
+        data["scan_id"] = row["id"]
+        return data
     return None
 
 # Auto-initialize database tables on module load

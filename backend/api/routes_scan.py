@@ -6,11 +6,13 @@ scan history retrieval, and detailed report inspection.
 
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from engine.ast_analyzer import analyze_source_ast
 from engine.sandbox import DynamicSandbox
 from engine.risk_scorer import RiskScoringEngine
+from engine.report_generator import generate_json_report, generate_html_report
 from database import save_scan_report, get_recent_scans, get_scan_by_id
 from api.websocket_feed import ws_manager
 
@@ -249,3 +251,36 @@ async def fetch_scan_details(scan_id: int):
         "scan_id": scan_id,
         "report": report
     }
+
+
+@router.get("/scan/{scan_id}/report")
+async def export_json_report(scan_id: int):
+    """
+    Generates an executive JSON security compliance report for integration into CI/CD pipelines.
+    """
+    report = get_scan_by_id(scan_id)
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Scan record with ID {scan_id} not found."
+        )
+    exec_report = generate_json_report(report)
+    return {
+        "success": True,
+        "report": exec_report
+    }
+
+
+@router.get("/scan/{scan_id}/report/html", response_class=HTMLResponse)
+async def export_html_report(scan_id: int):
+    """
+    Generates a print-ready, standalone HTML security audit report.
+    """
+    report = get_scan_by_id(scan_id)
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Scan record with ID {scan_id} not found."
+        )
+    html_content = generate_html_report(report)
+    return HTMLResponse(content=html_content, status_code=200)
