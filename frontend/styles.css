@@ -289,6 +289,7 @@ body.dark-theme {
 .preset-buttons {
     display: flex;
     gap: 6px;
+    flex-wrap: wrap;
 }
 .btn-preset {
     padding: 4px 10px;

