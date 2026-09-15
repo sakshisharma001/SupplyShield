@@ -41,9 +41,10 @@
 - Real-time WebSocket terminal feed
 - Risk score gauge and findings table
 
-### ✅ Executive Security Audit Reports & Export Engine
-- **Report Generator** — Produces standardized JSON compliance reports and standalone, print-ready HTML audit reports
-- **Export Endpoints** — REST APIs (`GET /api/scan/{id}/report` and `GET /api/scan/{id}/report/html`) for CI/CD integration and PDF printing
+### ✅ DevSecOps CLI Tool & CI/CD Pipeline Integration
+- **DevSecOps CLI (`cli.py`)** — Terminal tool (`supplyshield scan`) with `--fail-on` build-blocking capabilities for security pipelines
+- **GitHub Actions Workflow** — Ready-to-use `.github/workflows/supplyshield-security-audit.yml` for automated PR security gates
+- **Executive Security Audit Reports** — Standardized JSON compliance reports and print-ready HTML audit reports (`/api/scan/{id}/report/html`)
 - **Malware Preset Suite** — 7 pre-configured attack samples (reverse shell, DNS tunneling, typosquatting, cryptominer, obfuscated backdoor)
 
 ## 🗺️ Roadmap
@@ -57,7 +58,7 @@
 | Phase 5 | SOC Security Dashboard (Frontend) | ✅ Done |
 | Phase 6 | Scan History & Audit Reports | ✅ Done |
 | Phase 7 | Executive Audit Report Engine & Export APIs | ✅ Done |
-| Phase 8 | CI/CD Pipeline Integration | 📋 Planned |
+| Phase 8 | DevSecOps CLI Tool & CI/CD Pipeline Integration | ✅ Done |
 | Phase 9 | Multi-Language Support | 📋 Planned |
 | Phase 10 | Cloud Deployment & Scaling | 📋 Planned |
 
