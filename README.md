@@ -4,132 +4,179 @@
     <strong>Autonomous Software Supply-Chain Security Audit & Detonation Engine</strong>
   </p>
   <p align="center">
-    <em>Real-time malicious package detection through AST taint analysis, sandboxed detonation, and composite risk scoring.</em>
+    <em>Real-time malicious package detection through AST taint analysis, sandboxed detonation, custom policy rules, and multi-language npm/Python scanning.</em>
   </p>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Status-In%20Development-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Status-Active%20Development-green?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/FastAPI-0.100+-00C853?style=for-the-badge&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tests-43%2F43%20Passing-brightgreen?style=for-the-badge" />
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" />
 </p>
 
 ---
 
-> 🚧 **This project is under active development.** Features are being built and shipped incrementally. See the [Roadmap](#-roadmap) for current progress.
+## 🚀 Overview
+
+**SupplyShield** is an enterprise-grade security engine designed to detect and neutralize malicious software packages across supply chains. It combines compiler AST static analysis, dynamic sandboxed execution, custom YARA-like policy rules, and multi-language (Python & Node.js/npm) manifest scanning to catch credential stealers, reverse shells, typosquatting, and obfuscated backdoors — **before** code reaches production.
 
 ---
 
-## 🚀 Overview
-
-**SupplyShield** is a security tool designed to detect and neutralize malicious Python packages in the software supply chain. It combines multiple analysis engines to identify credential theft, code injection, obfuscation, and data exfiltration attempts — **before** a package is installed.
-
-## ✨ Features Implemented So Far
+## ✨ Key Capabilities & Feature Matrix
 
 ### ✅ Backend — Security Analysis Pipeline
-- **AST Static Analyzer** — Parses Python source into Abstract Syntax Trees to detect dangerous calls, credential theft, obfuscation, and Trojan Source attacks (7+ rule categories)
-- **Dynamic Sandbox** — Isolated ephemeral execution environment with canary tripwire files, audit hooks, and 3-second watchdog timeout
-- **Risk Scoring Engine** — Weighted composite scoring (40% static + 60% dynamic) with correlation bonuses and MITRE ATT&CK technique mapping
-- **SQLite Audit Ledger** — Persistent scan history with full traceability
-- **REST API** — FastAPI endpoints for code scanning, file uploads, and scan history
-- **WebSocket Telemetry** — Real-time broadcast of scan events to connected clients
+- **AST Static Security Engine (`ast_analyzer.py`)** — Parses Python code into Abstract Syntax Trees to detect dangerous system calls (`os.system`, `subprocess`), network sockets, obfuscation (`base64`/`zlib`), credential theft, and Trojan Source attacks (CVE-2021-42574).
+- **Dynamic Detonation Sandbox (`sandbox.py`)** — Ephemeral execution environment (`supplyshield_env_<uuid>`) with synthetic canary tripwires (`~/.aws/credentials`, `~/.ssh/id_rsa`), network audit hooks, and a 3-second watchdog SIGKILL timer.
+- **Dynamic YARA & Custom Policy Rule Engine (`custom_rules.py`)** — Loads enterprise security policies from `rules.json` to evaluate `BANNED_IMPORT`, `FORBIDDEN_CALL`, `REGEX_PATTERN` (hardcoded secrets/keys), and `MAX_ENTROPY_THRESHOLD` rules.
+- **Multi-Language Package Scanner (`javascript_analyzer.py`)** — Scans Node.js `package.json` manifests for dangerous `preinstall`/`postinstall` lifecycle hook abuse and inspects JavaScript code for `eval()`, `child_process.exec`, and obfuscation.
+- **Composite Risk Scoring Engine (`risk_scorer.py`)** — Weighted 0-100 scoring model (40% static AST + 60% dynamic sandbox), correlation risk multipliers, SLSA provenance tiers, and MITRE ATT&CK technique mapping.
+- **Executive Report Generator (`report_generator.py`)** — Generates standardized JSON audit reports and print-ready HTML compliance reports (`/api/scan/{id}/report/html`).
 
 ### ✅ Frontend — SOC Dashboard
-- Dark-mode glassmorphism UI
-- File upload & code editor with preset malicious samples
-- Real-time WebSocket terminal feed
-- Risk score gauge and findings table
+- **Dark-Mode Glassmorphic Interface** — Modern responsive security operations dashboard.
+- **Live Terminal Telemetry** — Real-time sub-millisecond WebSocket broadcast feed (`/ws/telemetry`).
+- **Malware Preset Library** — 7 pre-configured attack samples (reverse shell, DNS exfiltration, typosquatting, cryptominer, obfuscated backdoor).
+- **Interactive Risk Gauge & Report Export** — SVG animated risk meter and modal report preview/download.
 
 ### ✅ DevSecOps CLI Tool & CI/CD Pipeline Integration
-- **DevSecOps CLI (`cli.py`)** — Terminal tool (`supplyshield scan`) with `--fail-on` build-blocking capabilities for security pipelines
-- **GitHub Actions Workflow** — Ready-to-use `.github/workflows/supplyshield-security-audit.yml` for automated PR security gates
-- **Executive Security Audit Reports** — Standardized JSON compliance reports and print-ready HTML audit reports (`/api/scan/{id}/report/html`)
-- **Malware Preset Suite** — 7 pre-configured attack samples (reverse shell, DNS tunneling, typosquatting, cryptominer, obfuscated backdoor)
+- **Terminal CLI (`cli.py`)** — `python cli.py scan <target> --fail-on CRITICAL` for local terminal security audits and automated build-blocking in pipelines.
+- **GitHub Actions Workflow** — Automated PR security gate (`.github/workflows/supplyshield-security-audit.yml`).
 
-## 🗺️ Roadmap
+---
 
-| Phase | Feature | Status |
-|-------|---------|--------|
-| Phase 1 | AST Static Analysis Engine | ✅ Done |
-| Phase 2 | Dynamic Sandbox with Canary Traps | ✅ Done |
-| Phase 3 | Composite Risk Scoring & MITRE Mapping | ✅ Done |
-| Phase 4 | REST API & WebSocket Telemetry | ✅ Done |
-| Phase 5 | SOC Security Dashboard (Frontend) | ✅ Done |
-| Phase 6 | Scan History & Audit Reports | ✅ Done |
-| Phase 7 | Executive Audit Report Engine & Export APIs | ✅ Done |
-| Phase 8 | DevSecOps CLI Tool & CI/CD Pipeline Integration | ✅ Done |
-| Phase 9 | Multi-Language Support | 📋 Planned |
-| Phase 10 | Cloud Deployment & Scaling | 📋 Planned |
+## 🗺️ Implementation Roadmap
+
+| Phase | Feature | Component | Status |
+|-------|---------|-----------|--------|
+| **Phase 1** | AST Static Security Engine | `ast_analyzer.py` | ✅ Done |
+| **Phase 2** | Dynamic Detonation Sandbox & Canary Traps | `sandbox.py` | ✅ Done |
+| **Phase 3** | Composite Risk Scoring & MITRE ATT&CK Mapping | `risk_scorer.py` | ✅ Done |
+| **Phase 4** | REST API & WebSocket Real-time Telemetry | `main.py`, `routes_scan.py` | ✅ Done |
+| **Phase 5** | Glassmorphism SOC Security Dashboard | `frontend/` | ✅ Done |
+| **Phase 6** | Audit Database Ledger & Scan History | `database.py` | ✅ Done |
+| **Phase 7** | Executive Report Engine (JSON & HTML Export) | `report_generator.py` | ✅ Done |
+| **Phase 8** | DevSecOps CLI Tool & GitHub Actions CI/CD | `cli.py`, `.github/workflows/` | ✅ Done |
+| **Phase 9** | Multi-Language Package Support (Node.js/npm) | `javascript_analyzer.py` | ✅ Done |
+| **Phase 10** | Dynamic YARA & Custom Policy Rule Engine | `custom_rules.py`, `rules.json` | ✅ Done |
+| **Phase 11** | Production Docker Containerization | `Dockerfile`, `docker-compose` | 📋 Planned |
+
+---
 
 ## 🏗️ Architecture
 
 ```
-┌──────────────────────────────────────────────────┐
-│              SupplyShield Gateway                 │
-│               (FastAPI + CORS)                    │
-├──────────┬──────────────┬───────────────────────-┤
-│ REST API │  WebSocket   │  Static Dashboard       │
-│ /api/*   │ /ws/telemetry│  / (HTML/CSS/JS)        │
-├──────────┴──────────────┴───────────────────────-┤
-│                                                   │
-│  ┌────────────┐ ┌────────────┐ ┌──────────────┐  │
-│  │    AST     │ │  Sandbox   │ │    Risk      │  │
-│  │  Analyzer  │→│ Detonation │→│   Scorer     │  │
-│  └────────────┘ └────────────┘ └──────────────┘  │
-│                       │                           │
-│                ┌──────┴──────┐                    │
-│                │   SQLite    │                    │
-│                │ Audit Ledger│                    │
-│                └─────────────┘                    │
-└──────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                        SupplyShield Gateway                            │
+│                     (FastAPI + CORS + WebSockets)                      │
+├───────────────────┬──────────────────────┬─────────────────────────────┤
+│     REST API      │  WebSocket Feed      │  SOC Security Dashboard     │
+│     /api/scan/*   │  /ws/telemetry       │  (HTML5 / CSS3 / Vanilla JS)│
+├───────────────────┴──────────────────────┴─────────────────────────────┤
+│                                                                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
+│  │ AST Static   │  │ Ephemeral    │  │ Custom Policy│  │ Risk       │  │
+│  │ Analyzer     │→ │ Sandbox      │→ │ Rule Engine  │→ │ Scorer &   │  │
+│  │ (Python/JS)  │  │ (Detonation) │  │ (rules.json) │  │ MITRE Tag  │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘  │
+│                           │                                  │         │
+│                    ┌──────┴──────┐                    ┌──────┴──────┐  │
+│                    │ SQLite      │                    │ Audit Report│  │
+│                    │ Audit Ledger│                    │ Generator   │  │
+│                    └─────────────┘                    └─────────────┘  │
+└────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
 
 ## 📁 Project Structure
 
 ```
 SupplyShield/
 ├── backend/
-│   ├── main.py                 # FastAPI server entrypoint
-│   ├── config.py               # Security policies & thresholds
-│   ├── database.py             # SQLite audit ledger
+│   ├── main.py                     # FastAPI server entrypoint
+│   ├── config.py                   # Security policies & thresholds
+│   ├── database.py                 # SQLite audit ledger
+│   ├── cli.py                      # DevSecOps terminal CLI tool
+│   ├── rules.json                  # Enterprise custom security policy rules
 │   ├── api/
-│   │   ├── routes_scan.py      # Scanning pipeline & API routes
-│   │   └── websocket_feed.py   # Real-time telemetry manager
+│   │   ├── routes_scan.py          # REST API endpoints (Python & npm scans)
+│   │   └── websocket_feed.py       # WebSocket real-time telemetry broadcaster
 │   ├── engine/
-│   │   ├── ast_analyzer.py     # AST taint analysis (7+ rules)
-│   │   ├── sandbox.py          # Ephemeral detonation sandbox
-│   │   └── risk_scorer.py      # Composite risk scoring
-│   └── samples/                # Test malicious samples
+│   │   ├── ast_analyzer.py         # AST static code analysis engine
+│   │   ├── sandbox.py              # Ephemeral detonation sandbox
+│   │   ├── risk_scorer.py          # Composite risk scoring & MITRE ATT&CK
+│   │   ├── custom_rules.py         # Dynamic policy rule engine
+│   │   ├── javascript_analyzer.py  # Node.js / npm package analyzer
+│   │   └── report_generator.py     # JSON & HTML report engine
+│   ├── samples/                    # Test malware sample suite
+│   │   ├── safe_math_pkg.py
+│   │   ├── obfuscated_backdoor.py
+│   │   ├── credential_stealer.py
+│   │   ├── reverse_shell.py
+│   │   ├── dns_exfiltrator.py
+│   │   ├── typosquat_package.py
+│   │   ├── cryptominer_dropper.py
+│   │   ├── npm_safe_package.json
+│   │   └── npm_malicious_postinstall.json
+│   ├── test_samples_suite.py       # 31 Pytest regression tests
+│   ├── test_custom_rules.py        # 6 Custom rule engine tests
+│   ├── test_js_engine.py           # Node.js / npm test suite
+│   ├── test_report_engine.py       # Report generator tests
+│   └── test_cli.py                 # CLI build-blocking tests
 ├── frontend/
-│   ├── index.html              # SOC Dashboard
-│   ├── styles.css              # Dark-mode design system
-│   └── app.js                  # Dashboard logic & WebSocket
+│   ├── index.html                  # SOC Dashboard UI
+│   ├── styles.css                  # Dark-mode design system
+│   └── app.js                      # UI logic & WebSocket client
+├── .github/
+│   └── workflows/
+│       └── supplyshield-security-audit.yml
 ├── requirements.txt
 └── README.md
 ```
 
+---
+
 ## ⚡ Quick Start
 
-### Prerequisites
-- Python 3.10+
+### 1. Prerequisites
+- Python 3.10+ installed
 
-### Setup
+### 2. Installation & Server Setup
 
 ```bash
-# Clone the repo
+# Clone the repository
 git clone https://github.com/sakshisharma001/SupplyShield.git
 cd SupplyShield
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Run the server
+# Start the FastAPI server
 cd backend
-python main.py
+python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Then open `http://127.0.0.1:8000/` in your browser.
+Open `http://127.0.0.1:8000/` in your browser to access the **SOC Dashboard**.
+
+### 3. Run Security Scan via CLI
+
+```bash
+# Scan Python file
+python backend/cli.py scan backend/samples/obfuscated_backdoor.py --fail-on CRITICAL
+
+# Scan npm package.json
+python backend/cli.py scan backend/samples/npm_malicious_postinstall.json
+```
+
+### 4. Run Automated Test Suite
+
+```bash
+python -m pytest backend/test_samples_suite.py backend/test_custom_rules.py backend/test_cli.py -v
+```
+
+---
 
 ## 📄 License
 
@@ -138,5 +185,5 @@ This project is licensed under the MIT License.
 ---
 
 <p align="center">
-  <strong>Built with ❤️ for supply chain security</strong>
+  <strong>Built with ❤️ for Autonomous Software Supply Chain Security</strong>
 </p>
