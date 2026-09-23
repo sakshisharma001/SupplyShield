@@ -740,3 +740,126 @@ body.dark-theme {
     border-top: 1px solid var(--border-glass);
     margin-top: 40px;
 }
+
+/* ── Theme Toggle Button & Light Mode Theme Overrides ───────────────────────── */
+
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border-glass);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.theme-toggle-btn:hover {
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 12px var(--color-cyan-glow);
+    transform: translateY(-1px);
+}
+
+body.light-theme {
+    --bg-dark: #f1f5f9;
+    --bg-card: rgba(255, 255, 255, 0.92);
+    --bg-card-hover: rgba(241, 245, 249, 0.95);
+    --border-glass: rgba(0, 0, 0, 0.10);
+    --border-glow: rgba(14, 165, 233, 0.35);
+
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --text-dark: #64748b;
+
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+body.light-theme .glow-bg {
+    opacity: 0.12;
+}
+
+body.light-theme .glass-card {
+    background: rgba(255, 255, 255, 0.90);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+body.light-theme .preset-btn {
+    background: rgba(241, 245, 249, 0.85);
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #334155;
+}
+body.light-theme .preset-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+body.light-theme .tab-btn {
+    color: #475569;
+}
+body.light-theme .tab-btn.active {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+body.light-theme .code-editor,
+body.light-theme .terminal-body {
+    background-color: #0f172a;
+    color: #f8fafc;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme table th {
+    background-color: #e2e8f0;
+    color: #1e293b;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+body.light-theme table td {
+    color: #334155;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+body.light-theme .modal-card {
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+body.light-theme .status-badge {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #1e293b;
+}
+
+body.light-theme .slsa-badge {
+    background: rgba(14, 165, 233, 0.12);
+    border-color: rgba(14, 165, 233, 0.3);
+    color: #0284c7;
+}
+
+body.light-theme .verdict-clean {
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+body.light-theme .verdict-suspicious {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+body.light-theme .verdict-malicious {
+    background: rgba(239, 68, 68, 0.15);
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+

@@ -173,13 +173,45 @@ if miner:
     hide_process()`
 };
 
+// --- Theme Switching System (Light / Dark Mode) ---
+function initTheme() {
+    const savedTheme = localStorage.getItem("supplyshield_theme") || "dark";
+    setTheme(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.body.classList.contains("light-theme") ? "light" : "dark";
+    const nextTheme = currentTheme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+}
+
+function setTheme(theme) {
+    const icon = document.getElementById("theme-icon");
+    const label = document.getElementById("theme-label");
+
+    if (theme === "light") {
+        document.body.classList.remove("dark-theme");
+        document.body.classList.add("light-theme");
+        if (icon) icon.className = "fa-solid fa-moon";
+        if (label) label.textContent = "Dark Mode";
+    } else {
+        document.body.classList.remove("light-theme");
+        document.body.classList.add("dark-theme");
+        if (icon) icon.className = "fa-solid fa-sun";
+        if (label) label.textContent = "Light Mode";
+    }
+    localStorage.setItem("supplyshield_theme", theme);
+}
+
 // --- Initialization ---
 document.addEventListener("DOMContentLoaded", () => {
+    initTheme();
     initWebSocket();
     loadPreset("safe");
     checkBackendHealth();
     loadScanHistory();
 });
+
 
 // --- Tab Switching ---
 function switchTab(tabName) {
