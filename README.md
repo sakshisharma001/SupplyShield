@@ -9,12 +9,15 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Status-Active%20Development-green?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-v1.0.0%20Release-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/FastAPI-0.100+-00C853?style=for-the-badge&logo=fastapi&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tests-43%2F43%20Passing-brightgreen?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Docker-Supported-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tests-All%20Passing-brightgreen?style=for-the-badge" />
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" />
 </p>
+
 
 ---
 
