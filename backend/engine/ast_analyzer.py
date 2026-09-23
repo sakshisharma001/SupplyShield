@@ -34,6 +34,27 @@ SENSITIVE_PATTERNS = [
     r"\.config[/\\]gcloud"
 ]
 
+# Network/HTTP library imports that indicate exfiltration capability
+NETWORK_IMPORT_MODULES = [
+    "requests", "httpx", "aiohttp", "urllib", "urllib2", "urllib3",
+    "http.client", "ftplib", "smtplib", "imaplib", "paramiko"
+]
+
+# File deletion / anti-forensic function calls
+FILE_DELETION_CALLS = [
+    "os.remove", "os.unlink", "os.rmdir", "shutil.rmtree",
+    "pathlib.Path.unlink", "pathlib.Path.rmdir"
+]
+
+# Double obfuscation — zlib/gzip decompress functions
+DOUBLE_OBFUSCATION_CALLS = [
+    "zlib.decompress", "gzip.decompress", "bz2.decompress",
+    "lzma.decompress", "zlib.decompress"
+]
+
+# Max allowed sleep seconds before flagging logic bomb
+LOGIC_BOMB_SLEEP_THRESHOLD = 30.0
+
 class ASTSecurityVisitor(ast.NodeVisitor):
     """
     Compiler-level NodeVisitor traversing the AST to detect dangerous function calls,
@@ -55,6 +76,7 @@ class ASTSecurityVisitor(ast.NodeVisitor):
     def visit_Import(self, node: ast.Import):
         for alias in node.names:
             self.imported_modules.append(alias.name)
+            # Rule: Low-level terminal / memory manipulation
             if alias.name in ["pty", "ctypes"]:
                 self.findings.append({
                     "rule_id": "SEC-IMP-001",
@@ -65,12 +87,37 @@ class ASTSecurityVisitor(ast.NodeVisitor):
                     "snippet": self._get_snippet(node.lineno),
                     "mitre_tag": "T1059 Command and Scripting Interpreter"
                 })
+            # Rule SEC-IMP-002: Network/HTTP library imports (data exfiltration risk)
+            mod_base = alias.name.split(".")[0]
+            if mod_base in NETWORK_IMPORT_MODULES or alias.name in NETWORK_IMPORT_MODULES:
+                self.findings.append({
+                    "rule_id": "SEC-IMP-002",
+                    "severity": "MEDIUM",
+                    "title": f"Network/HTTP Library Import ({alias.name})",
+                    "message": f"Module '{alias.name}' enables outbound HTTP/TCP data exfiltration. Verify legitimate use.",
+                    "line": node.lineno,
+                    "snippet": self._get_snippet(node.lineno),
+                    "mitre_tag": "T1071 Application Layer Protocol"
+                })
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom):
         if node.module:
             self.imported_modules.append(node.module)
+            mod_base = node.module.split(".")[0]
+            if mod_base in NETWORK_IMPORT_MODULES or node.module in NETWORK_IMPORT_MODULES:
+                self.findings.append({
+                    "rule_id": "SEC-IMP-002",
+                    "severity": "MEDIUM",
+                    "title": f"Network/HTTP Library Import (from {node.module})",
+                    "message": f"Module '{node.module}' enables outbound HTTP/TCP data exfiltration. Verify legitimate use.",
+                    "line": node.lineno,
+                    "snippet": self._get_snippet(node.lineno),
+                    "mitre_tag": "T1071 Application Layer Protocol"
+                })
         self.generic_visit(node)
+
+
 
     def visit_Call(self, node: ast.Call):
         func_name = self._resolve_callable_name(node.func)
@@ -114,6 +161,54 @@ class ASTSecurityVisitor(ast.NodeVisitor):
                 "snippet": snippet,
                 "mitre_tag": "T1071 Application Layer Protocol"
             })
+
+        # Rule SEC-SYS-003: File Deletion / Anti-Forensics
+        elif func_name in FILE_DELETION_CALLS:
+            self.dangerous_calls_count += 1
+            self.findings.append({
+                "rule_id": "SEC-SYS-003",
+                "severity": "HIGH",
+                "title": f"Anti-Forensic File Deletion ({func_name})",
+                "message": f"Destructive file deletion via '{func_name}'. Common in malware that wipes evidence post-execution.",
+                "line": lineno,
+                "snippet": snippet,
+                "mitre_tag": "T1070.004 Indicator Removal: File Deletion"
+            })
+
+        # Rule SEC-OBF-007: Double Obfuscation (zlib/gzip + base64)
+        elif func_name in DOUBLE_OBFUSCATION_CALLS:
+            self.obfuscated_strings_count += 1
+            self.findings.append({
+                "rule_id": "SEC-OBF-007",
+                "severity": "CRITICAL",
+                "title": f"Double-Layer Decompression Obfuscation ({func_name})",
+                "message": f"Use of '{func_name}' on an encoded payload indicates multi-layer obfuscated shellcode unpacker.",
+                "line": lineno,
+                "snippet": snippet,
+                "mitre_tag": "T1027 Obfuscated Files or Information"
+            })
+
+        # Rule SEC-TIME-008: Logic Bomb — time.sleep(N > 30)
+        elif func_name == "time.sleep" and node.args:
+            try:
+                sleep_arg = node.args[0]
+                sleep_val = None
+                if isinstance(sleep_arg, ast.Constant) and isinstance(sleep_arg.value, (int, float)):
+                    sleep_val = float(sleep_arg.value)
+                elif isinstance(sleep_arg, ast.UnaryOp) and isinstance(sleep_arg.op, ast.USub):
+                    pass  # negative sleep, ignore
+                if sleep_val is not None and sleep_val >= LOGIC_BOMB_SLEEP_THRESHOLD:
+                    self.findings.append({
+                        "rule_id": "SEC-TIME-008",
+                        "severity": "HIGH",
+                        "title": f"Logic Bomb Sleep Delay ({sleep_val}s)",
+                        "message": f"time.sleep({sleep_val}) with a delay ≥{LOGIC_BOMB_SLEEP_THRESHOLD}s is a classic logic bomb / sandbox evasion technique.",
+                        "line": lineno,
+                        "snippet": snippet,
+                        "mitre_tag": "T1497 Virtualization/Sandbox Evasion"
+                    })
+            except Exception:
+                pass
 
         self.generic_visit(node)
 

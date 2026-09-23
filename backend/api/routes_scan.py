@@ -16,12 +16,64 @@ from engine.report_generator import generate_json_report, generate_html_report
 from engine.javascript_analyzer import analyze_npm_manifest, analyze_javascript_code
 from database import save_scan_report, get_recent_scans, get_scan_by_id
 from api.websocket_feed import ws_manager
+from config import settings
 
 router = APIRouter(tags=["Security Scanning"])
 
 # Single shared instances of detection engines
 sandbox_engine = DynamicSandbox()
-scorer_engine = RiskScoringEngine()
+scorer_engine  = RiskScoringEngine()
+
+
+# ── Upload Validation Helper ───────────────────────────────────────────────────
+
+def validate_upload(
+    content_bytes: bytes,
+    filename: str,
+    allowed_extensions: Optional[List[str]] = None,
+    max_size_bytes: int = settings.MAX_UPLOAD_SIZE_BYTES
+) -> None:
+    """
+    Validates uploaded file for:
+    - File size (raises HTTP 413 if over limit)
+    - Extension whitelist (raises HTTP 422 if wrong type)
+    - Binary / non-text content (raises HTTP 422 if not valid UTF-8/Latin-1 text)
+    """
+    # 1. File size check
+    if len(content_bytes) > max_size_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=(
+                f"File '{filename}' is too large ({len(content_bytes):,} bytes). "
+                f"Maximum allowed size: {max_size_bytes:,} bytes "
+                f"({max_size_bytes // 1024} KB)."
+            )
+        )
+
+    # 2. Extension whitelist
+    exts = allowed_extensions or settings.ALLOWED_EXTENSIONS
+    import os as _os
+    _, ext = _os.path.splitext(filename.lower())
+    if ext not in exts:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"File type '{ext or '(no extension)'}' is not allowed. "
+                f"Accepted file types: {', '.join(exts)}"
+            )
+        )
+
+    # 3. Binary content check — must be decodable as text
+    try:
+        content_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        try:
+            content_bytes.decode("latin-1")
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"File '{filename}' appears to be a binary file. Only text-based source files are accepted."
+            )
 
 
 # --- Pydantic Request & Response Schemas ---
@@ -44,15 +96,19 @@ async def get_health_status():
     return {
         "status": "HEALTHY",
         "service": "SupplyShield Security Gateway & Detonation Engine",
-        "version": "1.0.0",
+        "version": settings.APP_VERSION,
         "engines": {
+            "ast_static_engine": "ACTIVE",
+            "ephemeral_sandbox": "ACTIVE",
+            "risk_scorer": "ACTIVE",
+            "sqlite_audit_db": "ACTIVE",
             "ast_analyzer": "ONLINE",
             "dynamic_sandbox": "ONLINE",
-            "risk_scorer": "ONLINE",
             "custom_rule_engine": "ONLINE",
             "javascript_analyzer": "ONLINE"
         }
     }
+
 
 
 # --- Core Analysis Pipeline Function ---
@@ -161,21 +217,6 @@ async def execute_security_pipeline(source_code: str, package_name: str) -> Dict
 
 # --- API Routes ---
 
-@router.get("/health", response_model=HealthResponse)
-async def health_check():
-    """Healthcheck endpoint reporting active detection subsystems and server state."""
-    return {
-        "status": "HEALTHY",
-        "service": "SupplyShield Detonation Engine",
-        "version": "1.0.0",
-        "engines": {
-            "ast_static_engine": "ACTIVE",
-            "ephemeral_sandbox": "ACTIVE",
-            "risk_scorer": "ACTIVE",
-            "sqlite_audit_db": "ACTIVE",
-            "websocket_telemetry": f"ACTIVE ({len(ws_manager.active_connections)} clients)"
-        }
-    }
 
 
 @router.post("/scan/code")
@@ -206,18 +247,29 @@ async def scan_package_file(
     package_name: Optional[str] = Form(None)
 ):
     """
-    Accepts uploaded Python package files (.py), runs them through the full detonation
-    sandbox, and returns the complete security assessment report.
+    Accepts uploaded Python package files (.py), validates size and type,
+    runs them through the full detonation sandbox, and returns the complete
+    security assessment report.
     """
     try:
         content_bytes = await file.read()
+        filename = file.filename or "uploaded_package.py"
+
+        # ── Validate upload before processing ────────────────────────────────
+        validate_upload(
+            content_bytes=content_bytes,
+            filename=filename,
+            allowed_extensions=[".py"],
+            max_size_bytes=settings.MAX_UPLOAD_SIZE_BYTES
+        )
+
         try:
             source_code = content_bytes.decode("utf-8")
         except UnicodeDecodeError:
             source_code = content_bytes.decode("latin-1", errors="ignore")
 
-        target_name = package_name or file.filename or "uploaded_package.py"
-        
+        target_name = package_name or filename
+
         report = await execute_security_pipeline(
             source_code=source_code,
             package_name=target_name
@@ -228,6 +280,8 @@ async def scan_package_file(
             "file_size_bytes": len(content_bytes),
             "report": report
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -312,11 +366,21 @@ async def scan_npm_package(
     """
     Scans Node.js npm package manifests (package.json) for malicious lifecycle scripts
     or JavaScript source files (.js) for dynamic eval / subprocess exfiltration.
+    Validates file type and size before processing.
     """
     try:
         content_bytes = await file.read()
-        content_str = content_bytes.decode("utf-8", errors="ignore")
         filename = file.filename or "package.json"
+
+        # ── Validate upload before processing ────────────────────────────────
+        validate_upload(
+            content_bytes=content_bytes,
+            filename=filename,
+            allowed_extensions=[".json", ".js"],
+            max_size_bytes=settings.MAX_JSON_UPLOAD_SIZE_BYTES
+        )
+
+        content_str = content_bytes.decode("utf-8", errors="ignore")
 
         if filename.endswith(".json") or "package.json" in filename:
             result = analyze_npm_manifest(content_str)
@@ -326,8 +390,11 @@ async def scan_npm_package(
         return {
             "success": True,
             "filename": filename,
+            "file_size_bytes": len(content_bytes),
             "result": result
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

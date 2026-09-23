@@ -13,22 +13,36 @@ DANGEROUS_LIFECYCLE_HOOKS = ["preinstall", "postinstall", "install", "preuninsta
 
 # Suspicious CLI execution patterns inside npm package scripts
 DANGEROUS_CLI_PATTERNS = [
-    (r"curl\s+.*\|\s*(sh|bash)", "JS-LIFE-001", "CRITICAL", "Pipe to Shell Execution in Lifecycle Hook", "T1059.004"),
-    (r"wget\s+.*\|\s*(sh|bash)", "JS-LIFE-001", "CRITICAL", "Pipe to Shell Execution in Lifecycle Hook", "T1059.004"),
-    (r"powershell\s+-enc", "JS-LIFE-002", "CRITICAL", "Encoded PowerShell Command Execution", "T1027"),
-    (r"node\s+-e\s+['\"].*eval", "JS-LIFE-003", "HIGH", "Dynamic Node.js Eval Execution in Lifecycle Hook", "T1059.007"),
-    (r"bash\s+-i\s+>&", "JS-LIFE-004", "CRITICAL", "Reverse Shell Invocation in Lifecycle Script", "T1059.004"),
-    (r"nc\s+.*-e", "JS-LIFE-004", "CRITICAL", "Netcat Reverse Shell Invocation", "T1059.004")
+    (r"curl\s+.*\|\s*(sh|bash)",               "JS-LIFE-001", "CRITICAL", "Pipe to Shell Execution in Lifecycle Hook",      "T1059.004"),
+    (r"wget\s+.*\|\s*(sh|bash)",               "JS-LIFE-001", "CRITICAL", "Pipe to Shell Execution in Lifecycle Hook",      "T1059.004"),
+    (r"powershell\s+-enc",                     "JS-LIFE-002", "CRITICAL", "Encoded PowerShell Command Execution",            "T1027"),
+    (r"node\s+-e\s+['\"].*eval",               "JS-LIFE-003", "HIGH",     "Dynamic Node.js Eval Execution in Lifecycle Hook", "T1059.007"),
+    (r"bash\s+-i\s+>&",                        "JS-LIFE-004", "CRITICAL", "Reverse Shell Invocation in Lifecycle Script",    "T1059.004"),
+    (r"nc\s+.*-e",                             "JS-LIFE-004", "CRITICAL", "Netcat Reverse Shell Invocation",                "T1059.004"),
+    # NEW: Cross-language attack — python called from npm lifecycle hook
+    (r"python[23]?\s+-c\s+['\"\\.]",          "JS-LIFE-005", "CRITICAL", "Cross-Language Python Execution from npm Lifecycle Hook (Supply-Chain Pivot)", "T1059.006"),
+    # NEW: Base64 decode piped to shell
+    (r"base64\s+(-d|--decode).*\|\s*(sh|bash)", "JS-LIFE-006", "CRITICAL", "Base64 Decode Pipe to Shell in Lifecycle Hook", "T1027"),
 ]
 
 # Suspicious JavaScript AST/regex patterns in .js files
 JS_CODE_PATTERNS = [
-    (r"eval\s*\(", "JS-DYN-001", "CRITICAL", "Dynamic JavaScript Code Evaluation via eval()", "T1059.007"),
-    (r"Function\s*\(\s*['\"`]return\s+this['\"`]\s*\)", "JS-DYN-002", "HIGH", "Global Context Escape via Function() constructor", "T1059.007"),
+    (r"eval\s*\(",                                                        "JS-DYN-001", "CRITICAL", "Dynamic JavaScript Code Evaluation via eval()",                    "T1059.007"),
+    (r"Function\s*\(\s*['\"`]return\s+this['\"`]\s*\)",                   "JS-DYN-002", "HIGH",     "Global Context Escape via Function() constructor",                 "T1059.007"),
     (r"(child_process\s*\.\s*(exec|spawn|execFile|fork)|require\s*\(\s*['\"]child_process['\"]\s*\))", "JS-SYS-001", "CRITICAL", "Subprocess Execution via Node.js child_process", "T1059"),
-    (r"net\s*\.\s*(connect|createConnection)", "JS-NET-001", "HIGH", "Low-Level TCP Socket Connection via net module", "T1071"),
-    (r"process\s*\.\s*env", "JS-CRED-001", "MEDIUM", "Access to Node.js Process Environment Variables", "T1552.001"),
-    (r"fs\s*\.\s*(readFileSync|writeFileSync|unlinkSync)\s*\(\s*['\"`].*(id_rsa|aws|env|credentials)", "JS-CRED-002", "CRITICAL", "Sensitive Credential File System Access", "T1552.001")
+    (r"net\s*\.\s*(connect|createConnection)",                            "JS-NET-001", "HIGH",     "Low-Level TCP Socket Connection via net module",                   "T1071"),
+    (r"process\s*\.\s*env",                                               "JS-CRED-001", "MEDIUM",  "Access to Node.js Process Environment Variables",                 "T1552.001"),
+    (r"fs\s*\.\s*(readFileSync|writeFileSync|unlinkSync)\s*\(\s*['\"`].*(id_rsa|aws|env|credentials)", "JS-CRED-002", "CRITICAL", "Sensitive Credential File System Access", "T1552.001"),
+    # NEW JS-OBF-003: Hex-encoded string literals (eval bypass: \x65\x76\x61\x6c = 'eval')
+    (r"[\\]x[0-9a-fA-F]{2}([\\]x[0-9a-fA-F]{2}){3,}",                   "JS-OBF-003", "HIGH",     "Hex-Encoded String Literal (Eval Bypass via Character Encoding)",  "T1027"),
+    # NEW JS-OBF-004: Unicode escape sequences used to obfuscate dangerous calls
+    (r"[\\]u00[0-9a-fA-F]{2}([\\]u00[0-9a-fA-F]{2}){2,}",               "JS-OBF-004", "HIGH",     "Unicode Escape Sequence Obfuscation (Function Name Bypass)",       "T1027"),
+    # NEW JS-ENV-002: Mass environment dump targeting HOME, PATH, secrets
+    (r"process\.env\.(HOME|PATH|USER|SHELL|AWS_|SECRET|TOKEN|KEY|PASS)", "JS-ENV-002", "HIGH",     "Targeted Process Environment Variable Access (Credential Harvesting)", "T1552.001"),
+    # NEW JS-OBF-005: Base64 Buffer decode in JS (obfuscated payload delivery)
+    (r"Buffer\.from\s*\([^)]+,\s*['\"]base64['\"]\s*\)\.toString",       "JS-OBF-005", "HIGH",     "Base64 Buffer Payload Decode (Obfuscated JS Payload Delivery)",    "T1027"),
+    # NEW JS-NET-002: DNS resolution used for exfiltration (DNS tunneling)
+    (r"require\s*\(\s*['\"]dns['\"]\s*\)\s*\.\s*resolve",               "JS-NET-002", "HIGH",     "DNS Module Resolution (DNS Tunneling / Data Exfiltration via DNS)","T1071.004"),
 ]
 
 
