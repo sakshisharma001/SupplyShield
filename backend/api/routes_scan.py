@@ -13,6 +13,7 @@ from engine.ast_analyzer import analyze_source_ast
 from engine.sandbox import DynamicSandbox
 from engine.risk_scorer import RiskScoringEngine
 from engine.report_generator import generate_json_report, generate_html_report
+from engine.javascript_analyzer import analyze_npm_manifest, analyze_javascript_code
 from database import save_scan_report, get_recent_scans, get_scan_by_id
 from api.websocket_feed import ws_manager
 
@@ -284,3 +285,34 @@ async def export_html_report(scan_id: int):
         )
     html_content = generate_html_report(report)
     return HTMLResponse(content=html_content, status_code=200)
+
+
+@router.post("/scan/npm")
+async def scan_npm_package(
+    file: UploadFile = File(..., description="npm package.json or JavaScript (.js) file to scan")
+):
+    """
+    Scans Node.js npm package manifests (package.json) for malicious lifecycle scripts
+    or JavaScript source files (.js) for dynamic eval / subprocess exfiltration.
+    """
+    try:
+        content_bytes = await file.read()
+        content_str = content_bytes.decode("utf-8", errors="ignore")
+        filename = file.filename or "package.json"
+
+        if filename.endswith(".json") or "package.json" in filename:
+            result = analyze_npm_manifest(content_str)
+        else:
+            result = analyze_javascript_code(content_str, filename=filename)
+
+        return {
+            "success": True,
+            "filename": filename,
+            "result": result
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"JavaScript/npm security scan failed: {str(e)}"
+        )
+

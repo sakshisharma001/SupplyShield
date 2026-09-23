@@ -1,0 +1,43 @@
+[
+  {
+    "rule_id": "CUSTOM-IMP-001",
+    "name": "Banned Module Import",
+    "type": "BANNED_IMPORT",
+    "target": "pycryptodome",
+    "severity": "MEDIUM",
+    "risk_score_boost": 15,
+    "message": "Import of prohibited module 'pycryptodome' detected by organizational policy.",
+    "mitre_tag": "T1027 Obfuscated Files or Information"
+  },
+  {
+    "rule_id": "CUSTOM-CALL-002",
+    "name": "Prohibited Process Execution",
+    "type": "FORBIDDEN_CALL",
+    "target": ["os.system", "os.popen", "subprocess.Popen", "subprocess.run"],
+    "severity": "HIGH",
+    "risk_score_boost": 25,
+    "message": "Execution of prohibited system process call detected by security policy.",
+    "mitre_tag": "T1059 Command Execution"
+  },
+  {
+    "rule_id": "CUSTOM-SEC-003",
+    "name": "Hardcoded Private Key or Secret Token",
+    "type": "REGEX_PATTERN",
+    "pattern": "(AKIA[0-9A-Z]{16})|(-----BEGIN [A-Z ]*PRIVATE KEY-----)|(ghp_[A-Za-z0-9_]{36})",
+    "severity": "CRITICAL",
+    "risk_score_boost": 35,
+    "message": "Potential embedded cloud API key or private key secret detected.",
+    "mitre_tag": "T1552 Credentials in Files"
+  },
+  {
+    "rule_id": "CUSTOM-ENT-004",
+    "name": "Excessive Entropy Threshold Policy",
+    "type": "MAX_ENTROPY_THRESHOLD",
+    "threshold": 5.2,
+    "min_length": 30,
+    "severity": "HIGH",
+    "risk_score_boost": 20,
+    "message": "String literal exceeds maximum allowed organizational entropy policy.",
+    "mitre_tag": "T1027 Obfuscated Information"
+  }
+]

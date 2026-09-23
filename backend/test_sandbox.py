@@ -8,7 +8,11 @@ import io
 from engine.sandbox import sandbox_engine
 
 if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 

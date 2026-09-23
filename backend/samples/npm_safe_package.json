@@ -1,0 +1,15 @@
+{
+  "name": "safe-utility-lib",
+  "version": "1.0.0",
+  "description": "Clean utility library for mathematical operations",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "author": "Clean Developer",
+  "license": "MIT"
+}

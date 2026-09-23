@@ -190,10 +190,17 @@ class ASTSecurityVisitor(ast.NodeVisitor):
         return entropy
 
 
-def analyze_source_ast(source_code: str) -> Dict[str, Any]:
+try:
+    from backend.engine.custom_rules import CustomRuleEngine
+except ModuleNotFoundError:
+    from engine.custom_rules import CustomRuleEngine
+
+
+
+def analyze_source_ast(source_code: str, custom_rules_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Main entrypoint for AST Static Analysis.
-    Returns syntax metrics, vulnerability findings, Trojan Source checks, and risk score.
+    Returns syntax metrics, vulnerability findings, Trojan Source checks, custom rule policy matches, and risk score.
     """
     raw_lines = source_code.splitlines()
     
@@ -229,11 +236,18 @@ def analyze_source_ast(source_code: str) -> Dict[str, Any]:
     visitor = ASTSecurityVisitor(raw_lines)
     visitor.visit(tree)
 
-    all_findings = bidi_findings + visitor.findings
+    # 4. Custom Enterprise Policy Rule Evaluation
+    try:
+        custom_engine = CustomRuleEngine(rules_path_or_list=custom_rules_path)
+        custom_findings = custom_engine.evaluate_source(source_code, ast_tree=tree)
+    except Exception:
+        custom_findings = []
 
-    # 4. Calculate Static Risk Score (0 - 100)
+    all_findings = bidi_findings + visitor.findings + custom_findings
+
+    # 5. Calculate Static Risk Score (0 - 100)
     score = 0
-    for finding in all_findings:
+    for finding in bidi_findings + visitor.findings:
         if finding["severity"] == "CRITICAL":
             score += 35
         elif finding["severity"] == "HIGH":
@@ -242,6 +256,9 @@ def analyze_source_ast(source_code: str) -> Dict[str, Any]:
             score += 10
         elif finding["severity"] == "LOW":
             score += 5
+
+    for c_finding in custom_findings:
+        score += c_finding.get("risk_score_boost", 15)
 
     final_score = min(score, 100)
 
@@ -256,8 +273,10 @@ def analyze_source_ast(source_code: str) -> Dict[str, Any]:
             "ast_nodes_count": node_count,
             "imported_modules": list(set(visitor.imported_modules)),
             "dangerous_calls_count": visitor.dangerous_calls_count,
-            "obfuscated_strings_count": visitor.obfuscated_strings_count
+            "obfuscated_strings_count": visitor.obfuscated_strings_count,
+            "custom_rule_violations_count": len(custom_findings)
         },
         "findings": all_findings,
         "static_risk_score": final_score
     }
+
