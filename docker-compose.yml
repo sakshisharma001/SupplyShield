@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  supplyshield-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: supplyshield-security-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SUPPLYSHIELD_ENV=production
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - supplyshield_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  supplyshield_data:
+    driver: local

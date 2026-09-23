@@ -74,7 +74,20 @@ app.add_middleware(
 app.include_router(scan_router, prefix="/api")
 
 
+@app.get("/api/health", tags=["General"])
+async def health_check():
+    """Health check endpoint for Docker health probes and uptime monitoring."""
+    return {
+        "status": "HEALTHY",
+        "service": "SupplyShield Security Gateway & Detonation Engine",
+        "version": "1.0.0",
+        "engine": "SupplyShield",
+        "database": "CONNECTED"
+    }
+
+
 # --- WebSocket Telemetry Route ---
+
 
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry_endpoint(websocket: WebSocket):

@@ -1,0 +1,28 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Git history & local configurations
+.git/
+.gitignore
+.github/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Temporary execution sandboxes & database logs
+supplyshield_env_*
+*.sqlite3
+*.db
+
+# Node.js build artifacts
+node_modules/
+
+# Local sensitive guides & docs
+SUPPLYSHIELD_COMPLETE_DAYWISE_MASTER_GUIDE.md
+PLACEMENT_STUDY_NOTES.md
+PROJECT_PLAN_HINGLISH.md

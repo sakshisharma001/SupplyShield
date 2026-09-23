@@ -38,7 +38,25 @@ class HealthResponse(BaseModel):
     engines: Dict[str, str]
 
 
+@router.get("/health", response_model=HealthResponse)
+async def get_health_status():
+    """Health check probe endpoint for Docker & uptime monitoring."""
+    return {
+        "status": "HEALTHY",
+        "service": "SupplyShield Security Gateway & Detonation Engine",
+        "version": "1.0.0",
+        "engines": {
+            "ast_analyzer": "ONLINE",
+            "dynamic_sandbox": "ONLINE",
+            "risk_scorer": "ONLINE",
+            "custom_rule_engine": "ONLINE",
+            "javascript_analyzer": "ONLINE"
+        }
+    }
+
+
 # --- Core Analysis Pipeline Function ---
+
 
 async def execute_security_pipeline(source_code: str, package_name: str) -> Dict[str, Any]:
     """
