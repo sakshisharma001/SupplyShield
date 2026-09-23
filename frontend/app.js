@@ -177,31 +177,40 @@ if miner:
 function initTheme() {
     const savedTheme = localStorage.getItem("supplyshield_theme") || "dark";
     setTheme(savedTheme);
+
+    const btn = document.getElementById("theme-toggle-btn");
+    if (btn) {
+        btn.addEventListener("click", toggleTheme);
+    }
 }
 
 function toggleTheme() {
-    const currentTheme = document.body.classList.contains("light-theme") ? "light" : "dark";
-    const nextTheme = currentTheme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
+    const isLight = document.body.classList.contains("light-theme");
+    setTheme(isLight ? "dark" : "light");
 }
 
 function setTheme(theme) {
     const icon = document.getElementById("theme-icon");
-    const label = document.getElementById("theme-label");
 
     if (theme === "light") {
         document.body.classList.remove("dark-theme");
         document.body.classList.add("light-theme");
-        if (icon) icon.className = "fa-solid fa-moon";
-        if (label) label.textContent = "Dark Mode";
+        if (icon) {
+            icon.className = "fa-solid fa-moon";
+            icon.style.color = "#475569";
+        }
     } else {
         document.body.classList.remove("light-theme");
         document.body.classList.add("dark-theme");
-        if (icon) icon.className = "fa-solid fa-sun";
-        if (label) label.textContent = "Light Mode";
+        if (icon) {
+            icon.className = "fa-solid fa-sun";
+            icon.style.color = "#ffb703";
+        }
     }
     localStorage.setItem("supplyshield_theme", theme);
 }
+
+window.toggleTheme = toggleTheme;
 
 // --- Initialization ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -211,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
     checkBackendHealth();
     loadScanHistory();
 });
+
 
 
 // --- Tab Switching ---

@@ -743,26 +743,26 @@ body.dark-theme {
 
 /* ── Theme Toggle Button & Light Mode Theme Overrides ───────────────────────── */
 
-.theme-toggle-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    border-radius: 20px;
+.theme-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     border: 1px solid var(--border-glass);
     background: var(--bg-card);
-    color: var(--text-main);
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 600;
+    color: var(--color-cyan);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
     cursor: pointer;
     transition: all 0.25s ease;
 }
-.theme-toggle-btn:hover {
+.theme-icon-btn:hover {
     border-color: var(--color-cyan);
     box-shadow: 0 0 12px var(--color-cyan-glow);
-    transform: translateY(-1px);
+    transform: scale(1.08);
 }
+
 
 body.light-theme {
     --bg-dark: #f1f5f9;
