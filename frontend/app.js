@@ -509,10 +509,13 @@ function renderFindings(findings) {
         return;
     }
 
-    container.innerHTML = findings.map(f => {
+    window._currentFindings = findings;
+
+    container.innerHTML = findings.map((f, idx) => {
         const severity = f.severity ? f.severity.toLowerCase() : "medium";
         const cardClass = severity === "high" || severity === "critical" ? "finding-card-high" : (severity === "medium" ? "finding-card-medium" : "finding-card-low");
         const mitreCode = f.mitre_id || "T1059";
+        const ruleId = f.rule_id || f.category || "SECURITY_FINDING";
 
         return `
             <div class="finding-card ${cardClass}">
@@ -522,10 +525,103 @@ function renderFindings(findings) {
                 </div>
                 <div class="finding-desc"><strong>${f.category || "Security Finding"}:</strong> ${f.description}</div>
                 ${f.snippet ? `<div class="finding-snippet"><code>${f.snippet}</code></div>` : ""}
+                <div style="margin-top: 0.75rem; text-align: right;">
+                    <button class="btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; border-color: var(--color-cyan); color: var(--color-cyan);" onclick="generateAIFix(${idx})">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 AI Secure Fix
+                    </button>
+                </div>
             </div>
         `;
     }).join("");
 }
+
+// --- AI Remediation & Patch Generator ---
+async function generateAIFix(findingIndex) {
+    const finding = (window._currentFindings || [])[findingIndex];
+    if (!finding) return;
+
+    const modal = document.getElementById("ai-fix-modal");
+    const body = document.getElementById("ai-fix-modal-body");
+    modal.classList.remove("hidden");
+
+    body.innerHTML = `
+        <div class="text-center" style="padding: 2rem;">
+            <i class="fa-solid fa-brain fa-spin fa-2x" style="color: var(--color-cyan)"></i>
+            <p style="margin-top: 1rem; color: var(--text-primary); font-weight: 600;">Generating AI Security Patch & Refactoring Code...</p>
+        </div>
+    `;
+
+    try {
+        const payload = {
+            code_snippet: finding.snippet || document.getElementById("code-input").value,
+            rule_id: finding.rule_id || finding.category || "SECURITY_VULNERABILITY",
+            description: finding.description || "Security Finding Detected",
+            language: "python"
+        };
+
+        const res = await fetch(`${API_BASE_URL}/api/scan/ai-fix`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        body.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-weight: 700; font-size: 1.1rem; color: var(--color-cyan);"><i class="fa-solid fa-shield-halved"></i> ${data.title}</span>
+                    <span style="font-size: 0.75rem; background: rgba(0, 240, 255, 0.15); color: var(--color-cyan); padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 600;">${data.provider}</span>
+                </div>
+
+                <div style="background: rgba(0, 0, 0, 0.25); border-left: 3px solid var(--color-cyan); padding: 0.75rem; border-radius: 4px; font-size: 0.88rem; color: var(--text-secondary);">
+                    <strong>Security Analysis:</strong> ${data.explanation}
+                </div>
+
+                <div>
+                    <h5 style="margin-bottom: 0.4rem; color: var(--color-crimson);"><i class="fa-solid fa-bug"></i> Original Vulnerable Code:</h5>
+                    <pre style="background: rgba(255, 0, 0, 0.08); border: 1px solid rgba(255, 0, 0, 0.2); padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 0.82rem; overflow-x: auto; color: var(--text-primary);">${escapeHtml(data.original_code)}</pre>
+                </div>
+
+                <div>
+                    <h5 style="margin-bottom: 0.4rem; color: var(--color-emerald);"><i class="fa-solid fa-square-check"></i> AI Secure Refactored Code (Patch):</h5>
+                    <pre style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 0.82rem; overflow-x: auto; color: var(--color-emerald);">${escapeHtml(data.fixed_code)}</pre>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+                    <button class="btn-secondary" onclick="navigator.clipboard.writeText(\`${escapeJs(data.fixed_code)}\`); alert('Copied AI Secure Patch to clipboard!');">
+                        <i class="fa-solid fa-copy"></i> Copy Secure Patch
+                    </button>
+                    <button class="btn-primary" onclick="closeAIFixModal()">Done</button>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        body.innerHTML = `
+            <div style="color: var(--color-crimson); padding: 1rem; text-align: center;">
+                <i class="fa-solid fa-circle-exclamation fa-2x"></i>
+                <p style="margin-top: 0.5rem;">Failed to generate AI Fix: ${err.message}</p>
+            </div>
+        `;
+    }
+}
+
+function closeAIFixModal() {
+    document.getElementById("ai-fix-modal").classList.add("hidden");
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function escapeJs(str) {
+    if (!str) return "";
+    return str.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$/g, "\\$");
+}
+
+window.generateAIFix = generateAIFix;
+window.closeAIFixModal = closeAIFixModal;
 
 // --- Scan History Loader ---
 async function loadScanHistory() {

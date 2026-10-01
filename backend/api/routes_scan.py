@@ -14,6 +14,7 @@ from engine.sandbox import DynamicSandbox
 from engine.risk_scorer import RiskScoringEngine
 from engine.report_generator import generate_json_report, generate_html_report
 from engine.javascript_analyzer import analyze_npm_manifest, analyze_javascript_code
+from engine.ai_remediator import generate_ai_remediation
 from database import save_scan_report, get_recent_scans, get_scan_by_id
 from api.websocket_feed import ws_manager
 from config import settings
@@ -400,4 +401,32 @@ async def scan_npm_package(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"JavaScript/npm security scan failed: {str(e)}"
         )
+
+
+class AIFixRequest(BaseModel):
+    code_snippet: Optional[str] = Field("", description="Code snippet containing vulnerability")
+    rule_id: str = Field(..., description="Vulnerability rule ID (e.g. REVERSE_SHELL_ATTACK)")
+    description: Optional[str] = Field("", description="Finding description")
+    language: Optional[str] = Field("python", description="Programming language")
+
+
+@router.post("/scan/ai-fix")
+async def generate_ai_fix(req: AIFixRequest):
+    """
+    Generates an automated AI secure patch and remediation explanation for a detected finding.
+    """
+    try:
+        remediation = generate_ai_remediation(
+            code_snippet=req.code_snippet or "",
+            rule_id=req.rule_id,
+            description=req.description or "",
+            language=req.language or "python"
+        )
+        return remediation
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"AI Remediation generation failed: {str(e)}"
+        )
+
 
