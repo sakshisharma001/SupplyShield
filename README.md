@@ -48,6 +48,7 @@ Every finding is automatically tagged to the **MITRE ATT&CK framework** and scor
   - Canary tripwires: `.ssh/id_rsa`, `.env`, `.aws/credentials` planted to detect credential harvesting
   - Host environment variable sanitization (AWS keys, GitHub tokens stripped before execution)
   - 3-second process watchdog hard-kill
+- **AI Security Remediation & Safe Patch Engine** — Generates context-aware secure refactorings, safe code patch diffs, and security remediation explanations for every detected finding (via `/api/scan/ai-fix`).
 - **JavaScript / npm Analyzer** — Scans `package.json` lifecycle hooks (`preinstall`, `postinstall`), base64 pipe-to-shell execution, hex/unicode obfuscation, DNS tunneling, and targeted `process.env` harvesting.
 - **Custom Policy Rule Engine** — Loads enterprise security policies from `rules.json` supporting `BANNED_IMPORT`, `FORBIDDEN_CALL`, `REGEX_PATTERN`, and `MAX_ENTROPY_THRESHOLD` rules.
 - **Composite Risk Scorer** — Weighted multi-vector scoring: `0.40 x AST score + 0.60 x Sandbox score` with correlation bonuses.
@@ -55,6 +56,7 @@ Every finding is automatically tagged to the **MITRE ATT&CK framework** and scor
 ### SOC Dashboard
 
 - Glassmorphic dark/light mode UI with one-click theme toggle
+- 🤖 **1-Click AI Secure Fix Modal** — Generates secure refactored code patches for detected vulnerabilities directly in the UI
 - Real-time SOC telemetry via WebSocket (`/ws/telemetry`)
 - 7 pre-loaded malware presets (backdoor, credential stealer, reverse shell, DNS exfiltrator, cryptominer, typosquat)
 - Animated risk gauge (0-100), verdict badges, SLSA tier display
@@ -92,6 +94,7 @@ Every finding is automatically tagged to the **MITRE ATT&CK framework** and scor
 | Phase 10 | YARA-style Custom Policy Rule Engine | ✅ Complete |
 | Phase 11 | Production Hardening (Rate Limiting, Upload Validation, Audit Logs) | ✅ Complete |
 | Phase 12 | Docker Containerization + Health Probes | ✅ Complete |
+| Phase 13 | AI Security Remediation & Safe Patch Generator Engine | ✅ Complete |
 
 ---
 
