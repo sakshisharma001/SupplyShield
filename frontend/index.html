@@ -103,7 +103,7 @@
                         <textarea id="code-input" class="code-textarea" spellcheck="false" placeholder="# Paste Python dependency code here to inspect..."></textarea>
                     </div>
 
-                    <button class="btn-primary" id="scan-code-btn" onclick="scanCode()">
+                    <button type="button" class="btn-primary" id="scan-code-btn" onclick="scanCode(event)">
                         <i class="fa-solid fa-radar"></i> DETONATE & SCAN CODE
                     </button>
                 </div>
@@ -120,7 +120,7 @@
                         <div id="file-selected-name" class="file-selected-info hidden"></div>
                     </div>
 
-                    <button class="btn-primary" id="scan-file-btn" onclick="scanFile()" disabled>
+                    <button type="button" class="btn-primary" id="scan-file-btn" onclick="scanFile(event)" disabled>
                         <i class="fa-solid fa-shield-virus"></i> DETONATE & SCAN FILE
                     </button>
                 </div>

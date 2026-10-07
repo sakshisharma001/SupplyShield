@@ -379,7 +379,8 @@ async function checkBackendHealth() {
 }
 
 // --- Code Scan Action ---
-async function scanCode() {
+async function scanCode(e) {
+    if (e && e.preventDefault) e.preventDefault();
     const code = document.getElementById("code-input").value;
     if (!code.trim()) {
         alert("Please enter Python code or load a sample preset!");
@@ -412,7 +413,8 @@ async function scanCode() {
 }
 
 // --- File Scan Action ---
-async function scanFile() {
+async function scanFile(e) {
+    if (e && e.preventDefault) e.preventDefault();
     if (!selectedFile) return;
 
     const btn = document.getElementById("scan-file-btn");
