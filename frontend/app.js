@@ -443,7 +443,8 @@ async function scanFile() {
 }
 
 // --- Update UI Dashboard with Report Findings ---
-function updateThreatDashboard(report) {
+function updateThreatDashboard(rawReport) {
+    const report = (rawReport && rawReport.report) ? rawReport.report : ((rawReport && rawReport.result) ? rawReport.result : rawReport);
     const riskScore = Math.round(report.composite_risk_score !== undefined ? report.composite_risk_score : (report.risk_score || 0));
     const verdict = report.verdict || "CLEAN";
     const slsaTier = report.slsa_security_level || report.slsa_tier || "SLSA Level 4";
