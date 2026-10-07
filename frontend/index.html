@@ -35,7 +35,7 @@
             </div>
 
             <div class="header-status-group">
-                <button class="theme-icon-btn" id="theme-toggle-btn" title="Toggle Light/Dark Theme">
+                <button type="button" class="theme-icon-btn" id="theme-toggle-btn" title="Toggle Light/Dark Theme">
                     <i class="fa-solid fa-moon" id="theme-icon"></i>
                 </button>
                 <div class="status-badge" id="backend-status">
@@ -63,10 +63,10 @@
 
                 <!-- Input Mode Tabs -->
                 <div class="tab-group">
-                    <button class="tab-btn active" id="tab-code-btn" onclick="switchTab('code')">
+                    <button type="button" class="tab-btn active" id="tab-code-btn" onclick="switchTab('code', event)">
                         <i class="fa-solid fa-code"></i> Code Snippet
                     </button>
-                    <button class="tab-btn" id="tab-file-btn" onclick="switchTab('file')">
+                    <button type="button" class="tab-btn" id="tab-file-btn" onclick="switchTab('file', event)">
                         <i class="fa-solid fa-file-arrow-up"></i> Upload .py Package
                     </button>
                 </div>
@@ -77,25 +77,25 @@
                         <div class="editor-header">
                             <span class="file-label"><i class="fa-brands fa-python"></i> input_sample.py</span>
                             <div class="preset-buttons">
-                                <button class="btn-preset btn-preset-safe" onclick="loadPreset('safe')">
+                                <button type="button" class="btn-preset btn-preset-safe" onclick="loadPreset('safe', event)">
                                     <i class="fa-solid fa-check"></i> Safe
                                 </button>
-                                <button class="btn-preset btn-preset-backdoor" onclick="loadPreset('backdoor')">
+                                <button type="button" class="btn-preset btn-preset-backdoor" onclick="loadPreset('backdoor', event)">
                                     <i class="fa-solid fa-bug"></i> Backdoor
                                 </button>
-                                <button class="btn-preset btn-preset-stealer" onclick="loadPreset('stealer')">
+                                <button type="button" class="btn-preset btn-preset-stealer" onclick="loadPreset('stealer', event)">
                                     <i class="fa-solid fa-user-secret"></i> Stealer
                                 </button>
-                                <button class="btn-preset btn-preset-stealer" onclick="loadPreset('reverse_shell')">
+                                <button type="button" class="btn-preset btn-preset-stealer" onclick="loadPreset('reverse_shell', event)">
                                     <i class="fa-solid fa-terminal"></i> RevShell
                                 </button>
-                                <button class="btn-preset btn-preset-backdoor" onclick="loadPreset('dns_exfil')">
+                                <button type="button" class="btn-preset btn-preset-backdoor" onclick="loadPreset('dns_exfil', event)">
                                     <i class="fa-solid fa-globe"></i> DNS Exfil
                                 </button>
-                                <button class="btn-preset btn-preset-backdoor" onclick="loadPreset('typosquat')">
+                                <button type="button" class="btn-preset btn-preset-backdoor" onclick="loadPreset('typosquat', event)">
                                     <i class="fa-solid fa-mask"></i> Typosquat
                                 </button>
-                                <button class="btn-preset btn-preset-stealer" onclick="loadPreset('cryptominer')">
+                                <button type="button" class="btn-preset btn-preset-stealer" onclick="loadPreset('cryptominer', event)">
                                     <i class="fa-solid fa-microchip"></i> Miner
                                 </button>
                             </div>
@@ -177,7 +177,7 @@
                             <span class="dot dot-green"></span>
                         </div>
                         <span class="terminal-title"><i class="fa-solid fa-terminal"></i> LIVE SOC TELEMETRY FEED</span>
-                        <button class="btn-clear-term" onclick="clearTerminal()" title="Clear Terminal Logs">
+                        <button type="button" class="btn-clear-term" onclick="clearTerminal(event)" title="Clear Terminal Logs">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </div>
@@ -211,7 +211,7 @@
                     <h3><i class="fa-solid fa-clock-rotate-left"></i> Persistent Audit Scan History</h3>
                     <span class="panel-subtitle">Stored SQLite audit trail and historical threat decisions</span>
                 </div>
-                <button class="btn-secondary" onclick="loadScanHistory()">
+                <button type="button" class="btn-secondary" onclick="loadScanHistory(event)">
                     <i class="fa-solid fa-arrows-rotate"></i> Refresh Audit History
                 </button>
             </div>
@@ -242,7 +242,7 @@
             <div class="modal-card glass-card">
                 <div class="modal-header">
                     <h4><i class="fa-solid fa-file-contract"></i> Detailed Security Audit Report</h4>
-                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                    <button type="button" class="modal-close" onclick="closeModal(event)">&times;</button>
                 </div>
                 <div class="modal-body" id="modal-report-content">
                     <!-- Dynamic Report Content -->
@@ -255,7 +255,7 @@
             <div class="modal-card glass-card" style="max-width: 800px;">
                 <div class="modal-header">
                     <h4><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-cyan)"></i> SupplyShield AI Remediation & Secure Patch Generator</h4>
-                    <button class="modal-close" onclick="closeAIFixModal()">&times;</button>
+                    <button type="button" class="modal-close" onclick="closeAIFixModal(event)">&times;</button>
                 </div>
                 <div class="modal-body" id="ai-fix-modal-body">
                     <div class="text-center" style="padding: 2rem;">

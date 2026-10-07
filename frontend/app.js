@@ -224,7 +224,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // --- Tab Switching ---
-function switchTab(tabName) {
+function switchTab(tabName, e) {
+    if (e && e.preventDefault) e.preventDefault();
     currentTab = tabName;
     const codeBtn = document.getElementById("tab-code-btn");
     const fileBtn = document.getElementById("tab-file-btn");
@@ -245,7 +246,8 @@ function switchTab(tabName) {
 }
 
 // --- Load Code Preset ---
-function loadPreset(type) {
+function loadPreset(type, e) {
+    if (e && e.preventDefault) e.preventDefault();
     const textarea = document.getElementById("code-input");
     if (PRESETS[type]) {
         textarea.value = PRESETS[type];
