@@ -519,17 +519,19 @@ function renderFindings(findings) {
     container.innerHTML = findings.map((f, idx) => {
         const severity = f.severity ? f.severity.toLowerCase() : "medium";
         const cardClass = severity === "high" || severity === "critical" ? "finding-card-high" : (severity === "medium" ? "finding-card-medium" : "finding-card-low");
-        const mitreCode = f.mitre_id || "T1059";
-        const ruleId = f.rule_id || f.category || "SECURITY_FINDING";
+        const mitreCode = escapeHtml(f.mitre_id || f.mitre_tag || "T1059");
+        const categoryText = escapeHtml(f.category || f.rule_id || "Security Finding");
+        const descText = escapeHtml(f.description || f.message || f.title || "");
+        const snippetText = f.snippet ? escapeHtml(f.snippet) : "";
 
         return `
             <div class="finding-card ${cardClass}">
                 <div class="finding-header">
                     <span class="mitre-tag"><i class="fa-solid fa-shield-virus"></i> ${mitreCode}</span>
-                    <span class="severity-tag severity-${severity}">${f.severity || "MEDIUM"}</span>
+                    <span class="severity-tag severity-${escapeHtml(severity)}">${escapeHtml(f.severity || "MEDIUM")}</span>
                 </div>
-                <div class="finding-desc"><strong>${f.category || "Security Finding"}:</strong> ${f.description}</div>
-                ${f.snippet ? `<div class="finding-snippet"><code>${f.snippet}</code></div>` : ""}
+                <div class="finding-desc"><strong>${categoryText}:</strong> ${descText}</div>
+                ${snippetText ? `<div class="finding-snippet"><code>${snippetText}</code></div>` : ""}
                 <div style="margin-top: 0.75rem; text-align: right;">
                     <button class="btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; border-color: var(--color-cyan); color: var(--color-cyan);" onclick="generateAIFix(${idx})">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 AI Secure Fix
@@ -616,8 +618,13 @@ function closeAIFixModal() {
 }
 
 function escapeHtml(str) {
-    if (!str) return "";
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    if (str === null || str === undefined) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 }
 
 function escapeJs(str) {
@@ -641,16 +648,19 @@ async function loadScanHistory() {
         }
 
         tbody.innerHTML = history.map(item => {
-            const date = new Date(item.created_at || Date.now()).toLocaleTimeString();
+            const date = escapeHtml(new Date(item.created_at || Date.now()).toLocaleTimeString());
+            const targetSafe = escapeHtml(item.target_file || "snippet.py");
+            const verdictSafe = escapeHtml(item.verdict || "CLEAN");
+            const slsaSafe = escapeHtml(item.slsa_tier || "SLSA Level 4");
             const verdictClass = item.verdict === "CRITICAL_MALICIOUS" ? "verdict-malicious" : (item.verdict === "SUSPICIOUS" ? "verdict-suspicious" : "verdict-clean");
 
             return `
                 <tr>
-                    <td><strong>#${item.id}</strong> <br><small class="text-muted">${date}</small></td>
-                    <td><code>${item.target_file || "snippet.py"}</code></td>
-                    <td><strong>${Math.round(item.risk_score)}</strong>/100</td>
-                    <td><span class="verdict-badge ${verdictClass}" style="font-size: 11px; padding: 2px 8px;">${item.verdict}</span></td>
-                    <td><span class="slsa-badge">${item.slsa_tier || "SLSA Level 4"}</span></td>
+                    <td><strong>#${escapeHtml(item.id)}</strong> <br><small class="text-muted">${date}</small></td>
+                    <td><code>${targetSafe}</code></td>
+                    <td><strong>${Math.round(item.risk_score || 0)}</strong>/100</td>
+                    <td><span class="verdict-badge ${verdictClass}" style="font-size: 11px; padding: 2px 8px;">${verdictSafe}</span></td>
+                    <td><span class="slsa-badge">${slsaSafe}</span></td>
                     <td>
                         <button class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="viewScanDetails(${item.id})">
                             <i class="fa-solid fa-eye"></i> View Report
@@ -671,13 +681,17 @@ async function viewScanDetails(id) {
         const data = await res.json();
         const scanObj = data.report || data;
 
+        const targetSafe = escapeHtml(scanObj.target_file || scanObj.package_name || "snippet.py");
+        const verdictSafe = escapeHtml(scanObj.verdict || "UNKNOWN");
+        const findingsJsonSafe = escapeHtml(JSON.stringify(scanObj.findings || [], null, 2));
+
         const content = document.getElementById("modal-report-content");
         content.innerHTML = `
             <div style="font-family: var(--font-mono); line-height: 1.6;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <div>
-                        <p style="margin:0;"><strong>Scan Audit ID:</strong> #${id}</p>
-                        <p style="margin:0;"><strong>Target Package:</strong> <code>${scanObj.target_file || scanObj.package_name || "snippet.py"}</code></p>
+                        <p style="margin:0;"><strong>Scan Audit ID:</strong> #${escapeHtml(id)}</p>
+                        <p style="margin:0;"><strong>Target Package:</strong> <code>${targetSafe}</code></p>
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="window.open('${API_BASE_URL}/api/scan/${id}/report/html', '_blank')">
@@ -688,12 +702,12 @@ async function viewScanDetails(id) {
                         </button>
                     </div>
                 </div>
-                <p><strong>Timestamp:</strong> ${scanObj.created_at || new Date().toISOString()}</p>
-                <p><strong>Risk Score:</strong> <span style="font-size: 18px; font-weight: 800;">${scanObj.risk_score || scanObj.composite_risk_score || 0}/100</span></p>
-                <p><strong>Verdict:</strong> ${scanObj.verdict || "UNKNOWN"}</p>
+                <p><strong>Timestamp:</strong> ${escapeHtml(scanObj.created_at || new Date().toISOString())}</p>
+                <p><strong>Risk Score:</strong> <span style="font-size: 18px; font-weight: 800;">${Math.round(scanObj.risk_score || scanObj.composite_risk_score || 0)}/100</span></p>
+                <p><strong>Verdict:</strong> ${verdictSafe}</p>
                 <hr style="border-color: var(--border-glass); margin: 14px 0;">
                 <h5>Findings Breakdown (${scanObj.findings ? scanObj.findings.length : 0}):</h5>
-                <pre style="background: #050810; padding: 14px; border-radius: 8px; font-size: 11px; color: var(--color-cyan); overflow-x: auto;">${JSON.stringify(scanObj.findings || [], null, 2)}</pre>
+                <pre style="background: #050810; padding: 14px; border-radius: 8px; font-size: 11px; color: var(--color-cyan); overflow-x: auto;">${findingsJsonSafe}</pre>
             </div>
         `;
         document.getElementById("report-modal").classList.remove("hidden");

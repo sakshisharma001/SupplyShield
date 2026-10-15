@@ -4,9 +4,11 @@ Provides endpoints for synchronous code analysis, package file uploads,
 scan history retrieval, and detailed report inspection.
 """
 
+import os
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status, Security, Depends
 from fastapi.responses import HTMLResponse
+from fastapi.security import APIKeyHeader, HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 
 from engine.ast_analyzer import analyze_source_ast
@@ -24,6 +26,33 @@ router = APIRouter(tags=["Security Scanning"])
 # Single shared instances of detection engines
 sandbox_engine = DynamicSandbox()
 scorer_engine  = RiskScoringEngine()
+
+# ── API Key Security Dependency ────────────────────────────────────────────────
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+bearer_auth = HTTPBearer(auto_error=False)
+
+async def verify_api_key(
+    api_key_header_val: Optional[str] = Security(api_key_header),
+    bearer_creds: Optional[HTTPAuthorizationCredentials] = Security(bearer_auth)
+) -> bool:
+    """
+    Enforces API Key authentication if SUPPLYSHIELD_API_KEY environment variable is set.
+    Supports either 'X-API-Key: <key>' or 'Authorization: Bearer <key>'.
+    If SUPPLYSHIELD_API_KEY is not configured or empty, allows open access for local/demo use.
+    """
+    expected_key = settings.API_KEY
+    if not expected_key:
+        return True  # Open access when no key configured
+
+    if api_key_header_val and api_key_header_val.strip() == expected_key:
+        return True
+    if bearer_creds and bearer_creds.credentials.strip() == expected_key:
+        return True
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Unauthorized: Missing or invalid API key. Provide via 'X-API-Key' or 'Authorization: Bearer <key>'."
+    )
 
 
 # ── Upload Validation Helper ───────────────────────────────────────────────────
@@ -43,7 +72,7 @@ def validate_upload(
     # 1. File size check
     if len(content_bytes) > max_size_bytes:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=getattr(status, "HTTP_413_CONTENT_TOO_LARGE", 413),
             detail=(
                 f"File '{filename}' is too large ({len(content_bytes):,} bytes). "
                 f"Maximum allowed size: {max_size_bytes:,} bytes "
@@ -220,16 +249,29 @@ async def execute_security_pipeline(source_code: str, package_name: str) -> Dict
 
 
 
-@router.post("/scan/code")
+@router.post("/scan/code", dependencies=[Depends(verify_api_key)])
 async def scan_raw_code(request: ScanCodeRequest):
     """
     Directly scans raw Python source code through AST analysis, dynamic detonation,
-    and composite risk scoring.
+    and composite risk scoring. Enforces payload character size limit.
     """
+    # Enforce maximum code payload limit (HTTP 413)
+    if len(request.code) > settings.MAX_CODE_LENGTH_CHARS:
+        raise HTTPException(
+            status_code=getattr(status, "HTTP_413_CONTENT_TOO_LARGE", 413),
+            detail=(
+                f"Code payload exceeds maximum size limit ({len(request.code):,} chars). "
+                f"Maximum allowed: {settings.MAX_CODE_LENGTH_CHARS:,} characters."
+            )
+        )
+
+    # Sanitize package_name to prevent directory traversal
+    sanitized_target = os.path.basename(request.package_name or "code_snippet.py")
+
     try:
         report = await execute_security_pipeline(
             source_code=request.code,
-            package_name=request.package_name or "code_snippet.py"
+            package_name=sanitized_target
         )
         return {
             "success": True,
@@ -242,7 +284,7 @@ async def scan_raw_code(request: ScanCodeRequest):
         )
 
 
-@router.post("/scan/package")
+@router.post("/scan/package", dependencies=[Depends(verify_api_key)])
 async def scan_package_file(
     file: UploadFile = File(..., description="Python script or package file to analyze (.py)"),
     package_name: Optional[str] = Form(None)
@@ -251,10 +293,13 @@ async def scan_package_file(
     Accepts uploaded Python package files (.py), validates size and type,
     runs them through the full detonation sandbox, and returns the complete
     security assessment report.
+    Sanitizes filenames against path traversal.
     """
     try:
         content_bytes = await file.read()
-        filename = file.filename or "uploaded_package.py"
+        raw_filename = file.filename or "uploaded_package.py"
+        # Sanitize filename against directory traversal (e.g., ../../etc/passwd)
+        filename = os.path.basename(raw_filename)
 
         # ── Validate upload before processing ────────────────────────────────
         validate_upload(
@@ -269,7 +314,7 @@ async def scan_package_file(
         except UnicodeDecodeError:
             source_code = content_bytes.decode("latin-1", errors="ignore")
 
-        target_name = package_name or filename
+        target_name = os.path.basename(package_name) if package_name else filename
 
         report = await execute_security_pipeline(
             source_code=source_code,
@@ -290,7 +335,7 @@ async def scan_package_file(
         )
 
 
-@router.get("/history")
+@router.get("/history", dependencies=[Depends(verify_api_key)])
 async def fetch_scan_history(limit: int = 20):
     """
     Retrieves the most recent scan records from SQLite audit database for dashboard feeds.
@@ -309,7 +354,7 @@ async def fetch_scan_history(limit: int = 20):
         )
 
 
-@router.get("/scan/{scan_id}")
+@router.get("/scan/{scan_id}", dependencies=[Depends(verify_api_key)])
 async def fetch_scan_details(scan_id: int):
     """
     Retrieves the complete JSON security audit report for a specific scan ID.
@@ -327,7 +372,7 @@ async def fetch_scan_details(scan_id: int):
     }
 
 
-@router.get("/scan/{scan_id}/report")
+@router.get("/scan/{scan_id}/report", dependencies=[Depends(verify_api_key)])
 async def export_json_report(scan_id: int):
     """
     Generates an executive JSON security compliance report for integration into CI/CD pipelines.
@@ -345,7 +390,7 @@ async def export_json_report(scan_id: int):
     }
 
 
-@router.get("/scan/{scan_id}/report/html", response_class=HTMLResponse)
+@router.get("/scan/{scan_id}/report/html", response_class=HTMLResponse, dependencies=[Depends(verify_api_key)])
 async def export_html_report(scan_id: int):
     """
     Generates a print-ready, standalone HTML security audit report.
@@ -360,7 +405,7 @@ async def export_html_report(scan_id: int):
     return HTMLResponse(content=html_content, status_code=200)
 
 
-@router.post("/scan/npm")
+@router.post("/scan/npm", dependencies=[Depends(verify_api_key)])
 async def scan_npm_package(
     file: UploadFile = File(..., description="npm package.json or JavaScript (.js) file to scan")
 ):
@@ -371,7 +416,8 @@ async def scan_npm_package(
     """
     try:
         content_bytes = await file.read()
-        filename = file.filename or "package.json"
+        raw_filename = file.filename or "package.json"
+        filename = os.path.basename(raw_filename)
 
         # ── Validate upload before processing ────────────────────────────────
         validate_upload(
@@ -410,7 +456,7 @@ class AIFixRequest(BaseModel):
     language: Optional[str] = Field("python", description="Programming language")
 
 
-@router.post("/scan/ai-fix")
+@router.post("/scan/ai-fix", dependencies=[Depends(verify_api_key)])
 async def generate_ai_fix(req: AIFixRequest):
     """
     Generates an automated AI secure patch and remediation explanation for a detected finding.

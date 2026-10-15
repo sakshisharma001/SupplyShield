@@ -7,9 +7,12 @@ import sys
 import io
 from engine.ast_analyzer import analyze_source_ast
 
-# Force UTF-8 stdout if needed
-if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+# Safely reconfigure UTF-8 stdout if supported
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 

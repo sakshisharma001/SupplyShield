@@ -10,16 +10,22 @@ Combines Static AST findings and Dynamic Sandbox telemetry to compute:
 from typing import Dict, List, Any
 from config import settings
 
-# Global MITRE ATT&CK Tactic Categories
+# Global MITRE ATT&CK Tactic Categories & Provenance Map
 MITRE_TACTIC_MAP = {
     "T1059": {"tactic": "Execution", "name": "Command and Scripting Interpreter"},
     "T1059.006": {"tactic": "Execution", "name": "Python Command Execution"},
+    "T1059.004": {"tactic": "Execution", "name": "Unix Shell"},
     "T1027": {"tactic": "Defense Evasion", "name": "Obfuscated / Encrypted Information"},
     "T1036": {"tactic": "Defense Evasion", "name": "Masquerading (Trojan Source)"},
     "T1552": {"tactic": "Credential Access", "name": "Credentials in Files (.env / .aws)"},
+    "T1552.001": {"tactic": "Credential Access", "name": "Credentials in Files: Local Credentials"},
     "T1552.004": {"tactic": "Credential Access", "name": "Private Keys (.ssh/id_rsa)"},
     "T1071": {"tactic": "Command and Control", "name": "Application Layer Protocol"},
-    "T1499": {"tactic": "Impact", "name": "Endpoint Denial of Service / Persistent Loop"}
+    "T1071.001": {"tactic": "Command and Control", "name": "Web Protocols (HTTP/HTTPS Exfiltration)"},
+    "T1497": {"tactic": "Defense Evasion", "name": "Virtualization/Sandbox Evasion"},
+    "T1497.003": {"tactic": "Defense Evasion", "name": "Time Based Evasion"},
+    "T1105": {"tactic": "Command and Control", "name": "Ingress Tool Transfer"},
+    "T1053.003": {"tactic": "Persistence", "name": "Scheduled Task/Job: Cron"}
 }
 
 class RiskScoringEngine:
@@ -43,8 +49,20 @@ class RiskScoringEngine:
         static_findings = ast_result.get("findings", [])
         dynamic_findings = sandbox_result.get("dynamic_findings", [])
         
-        # 1. Base Weighted Score (40% Static AST + 60% Dynamic Sandbox)
-        base_score = (static_score * 0.4) + (dynamic_score * 0.6)
+        # 1. Base Weighted Score
+        # Dynamic execution captures runtime behavior (canary tripwires, network attempts, timeouts).
+        # Static AST analysis captures structural threats (backdoors, Trojan source, dangerous calls).
+        # A threat detected in EITHER engine must not be diluted by the other engine being clean.
+        base_score = max(static_score, dynamic_score) * 0.75 + min(static_score, dynamic_score) * 0.25
+        
+        # Enforce severity floors so confirmed critical/high vectors cannot be diluted to CLEAN:
+        has_critical = any(f.get("severity") == "CRITICAL" for f in static_findings + dynamic_findings)
+        has_high = any(f.get("severity") == "HIGH" for f in static_findings + dynamic_findings)
+        
+        if has_critical:
+            base_score = max(base_score, 70.0)
+        elif has_high:
+            base_score = max(base_score, 40.0)
         
         # 2. Correlation Multiplier (Multi-Stage Exploit Detection)
         # If static detected obfuscation AND dynamic detected credential/network access -> Exploit Chain Confirmed!
@@ -133,7 +151,8 @@ class RiskScoringEngine:
                     "technique_id": tech_id,
                     "tactic": info["tactic"],
                     "technique_name": info["name"],
-                    "severity": f.get("severity", "MEDIUM")
+                    "severity": f.get("severity", "MEDIUM"),
+                    "justification": f.get("mitre_justification") or f.get("message") or ""
                 })
         return ttps
 

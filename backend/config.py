@@ -41,17 +41,22 @@ class Settings(BaseModel):
 
     # Ephemeral Sandbox Execution Limits
     SANDBOX_TIMEOUT_SECONDS: float = float(
-        os.environ.get("SUPPLYSHIELD_SANDBOX_TIMEOUT", "3.0")
+        os.environ.get("SUPPLYSHIELD_SANDBOX_TIMEOUT", "10.0")
     )
     MAX_MEMORY_MB: int = 128
     TEMP_DIR_PREFIX: str = "supplyshield_env_"
+    DOCKER_IMAGE: str = os.environ.get("SUPPLYSHIELD_DOCKER_IMAGE", "python:3.12-slim")
+    ALLOW_WEAK_SANDBOX: bool = _env_bool("SUPPLYSHIELD_ALLOW_WEAK_SANDBOX", True)
+    ENABLE_SLEEP_SKIPPING: bool = _env_bool("SUPPLYSHIELD_ENABLE_SLEEP_SKIPPING", True)
 
-    # File Upload Limits
+    # File & Input Limits
     MAX_UPLOAD_SIZE_BYTES: int = 524288   # 512 KB for Python files
     MAX_JSON_UPLOAD_SIZE_BYTES: int = 65536  # 64 KB for npm manifests
+    MAX_CODE_LENGTH_CHARS: int = int(os.environ.get("SUPPLYSHIELD_MAX_CODE_CHARS", "200000"))  # 200k chars max
     ALLOWED_EXTENSIONS: List[str] = [".py", ".json", ".js"]
 
-    # API Rate Limiting
+    # API Security & Rate Limiting
+    API_KEY: str = os.environ.get("SUPPLYSHIELD_API_KEY", "")
     RATE_LIMIT_PER_MINUTE: int = int(
         os.environ.get("SUPPLYSHIELD_RATE_LIMIT", "30")
     )
