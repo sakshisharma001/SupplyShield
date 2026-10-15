@@ -152,7 +152,7 @@ app.add_middleware(
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-API-Key"],
 )
 
 # ── REST API Routes ───────────────────────────────────────────────────────────
@@ -206,6 +206,7 @@ async def websocket_telemetry_endpoint(websocket: WebSocket):
 
 # ── Static Frontend Dashboard ─────────────────────────────────────────────────
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 FRONTEND_DIR = os.path.join(CURRENT_DIR, "..", "frontend")
 if os.path.exists(FRONTEND_DIR):
@@ -213,14 +214,7 @@ if os.path.exists(FRONTEND_DIR):
 
 @app.get("/", tags=["General"])
 async def root():
-    return {
-        "status": "ONLINE",
-        "service": "SupplyShield Security Gateway",
-        "version": settings.APP_VERSION,
-        "environment": settings.ENVIRONMENT,
-        "dashboard": "/dashboard",
-        "docs": "/docs" if settings.DEBUG else "disabled"
-    }
+    return RedirectResponse(url="/dashboard")
 
 
 
