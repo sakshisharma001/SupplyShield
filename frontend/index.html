@@ -1,278 +1,537 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SupplyShield — Cyber Security Audit & Detonation Engine</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SupplyShield — Autonomous Software Supply-Chain Security Engine</title>
+  <meta name="description" content="Production-grade autonomous software supply-chain security audit and detonation engine. Scan Python packages before installation.">
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Inter & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css">
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="dark-theme">
-    <!-- Cyber Background Glow Gradients -->
-    <div class="glow-bg glow-cyan"></div>
-    <div class="glow-bg glow-purple"></div>
 
-    <div class="app-container">
-        <!-- Navigation Header -->
-        <header class="navbar glass-card">
-            <div class="brand-group">
-                <div class="brand-icon">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <div class="brand-text">
-                    <span class="brand-name">SUPPLY<span class="highlight">SHIELD</span></span>
-                    <span class="brand-tagline">Autonomous Dependency Detonation & AST Engine</span>
-                </div>
-            </div>
+  <div class="app-container">
 
-            <div class="header-status-group">
-                <button type="button" class="theme-icon-btn" id="theme-toggle-btn" title="Toggle Light/Dark Theme">
-                    <i class="fa-solid fa-moon" id="theme-icon"></i>
-                </button>
-                <div class="status-badge" id="backend-status">
-                    <span class="pulse-dot"></span>
-                    <span class="status-text">GATEWAY ONLINE</span>
-                </div>
-                <div class="status-badge ws-badge" id="ws-status">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span class="ws-status-text">WS LIVE</span>
-                </div>
-            </div>
+    <!-- ── Top Navigation Bar ─────────────────────────────────────────────── -->
+    <header class="top-navbar" role="banner">
+      <div class="brand-section">
+        <div class="brand-logo-icon" aria-hidden="true">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="brand-titles">
+          <span class="brand-name">Supply<span>Shield</span></span>
+          <span class="brand-tagline">Autonomous Dependency Detonation &amp; AST Engine</span>
+        </div>
+      </div>
 
+      <!-- Navigation Tabs -->
+      <nav class="nav-links" role="navigation" aria-label="Main navigation">
+        <button type="button" class="nav-link-btn active" id="nav-scan-btn" onclick="navigateTo('scan')" aria-current="page">
+          <i class="fa-solid fa-radar" aria-hidden="true"></i> Scan
+        </button>
+        <button type="button" class="nav-link-btn" id="nav-history-btn" onclick="navigateTo('history')">
+          <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> History
+        </button>
+        <button type="button" class="nav-link-btn" id="nav-about-btn" onclick="navigateTo('about')">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i> About
+        </button>
+      </nav>
 
-        </header>
-
-        <!-- Main Dashboard Layout Grid -->
-        <main class="dashboard-grid">
-            
-            <!-- Left Column: Input Scanner & Code Detonator -->
-            <section class="panel-card glass-card">
-                <div class="panel-header">
-                    <h3><i class="fa-solid fa-microchip"></i> Dependency Package Inspector</h3>
-                    <span class="panel-subtitle">Upload PyPI file or paste Python script</span>
-                </div>
-
-                <!-- Input Mode Tabs -->
-                <div class="tab-group">
-                    <button type="button" class="tab-btn active" id="tab-code-btn" onclick="switchTab('code', event)">
-                        <i class="fa-solid fa-code"></i> Code Snippet
-                    </button>
-                    <button type="button" class="tab-btn" id="tab-file-btn" onclick="switchTab('file', event)">
-                        <i class="fa-solid fa-file-arrow-up"></i> Upload .py Package
-                    </button>
-                </div>
-
-                <!-- Tab 1: Code Input Area -->
-                <div class="tab-content" id="tab-code">
-                    <div class="code-editor-wrapper">
-                        <div class="editor-header">
-                            <span class="file-label"><i class="fa-brands fa-python"></i> input_sample.py</span>
-                            <div class="preset-buttons">
-                                <button type="button" class="btn-preset btn-preset-safe" onclick="loadPreset('safe', event)">
-                                    <i class="fa-solid fa-check"></i> Safe
-                                </button>
-                                <button type="button" class="btn-preset btn-preset-backdoor" onclick="loadPreset('backdoor', event)">
-                                    <i class="fa-solid fa-bug"></i> Backdoor
-                                </button>
-                                <button type="button" class="btn-preset btn-preset-stealer" onclick="loadPreset('stealer', event)">
-                                    <i class="fa-solid fa-user-secret"></i> Stealer
-                                </button>
-                                <button type="button" class="btn-preset btn-preset-stealer" onclick="loadPreset('reverse_shell', event)">
-                                    <i class="fa-solid fa-terminal"></i> RevShell
-                                </button>
-                                <button type="button" class="btn-preset btn-preset-backdoor" onclick="loadPreset('dns_exfil', event)">
-                                    <i class="fa-solid fa-globe"></i> DNS Exfil
-                                </button>
-                                <button type="button" class="btn-preset btn-preset-backdoor" onclick="loadPreset('typosquat', event)">
-                                    <i class="fa-solid fa-mask"></i> Typosquat
-                                </button>
-                                <button type="button" class="btn-preset btn-preset-stealer" onclick="loadPreset('cryptominer', event)">
-                                    <i class="fa-solid fa-microchip"></i> Miner
-                                </button>
-                            </div>
-                        </div>
-                        <textarea id="code-input" class="code-textarea" spellcheck="false" placeholder="# Paste Python dependency code here to inspect..."></textarea>
-                    </div>
-
-                    <button type="button" class="btn-primary" id="scan-code-btn" onclick="scanCode(event)">
-                        <i class="fa-solid fa-radar"></i> DETONATE & SCAN CODE
-                    </button>
-                </div>
-
-                <!-- Tab 2: File Upload Drag & Drop Area -->
-                <div class="tab-content hidden" id="tab-file">
-                    <div class="drop-zone" id="drop-zone" onclick="triggerFileInput()">
-                        <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
-                        <div class="drop-text">
-                            <strong>Drag & Drop .py Package File Here</strong>
-                            <span>or click to browse local files</span>
-                        </div>
-                        <input type="file" id="file-input" accept=".py" class="hidden-file-input" onchange="handleFileSelected(event)">
-                        <div id="file-selected-name" class="file-selected-info hidden"></div>
-                    </div>
-
-                    <button type="button" class="btn-primary" id="scan-file-btn" onclick="scanFile(event)" disabled>
-                        <i class="fa-solid fa-shield-virus"></i> DETONATE & SCAN FILE
-                    </button>
-                </div>
-            </section>
-
-            <!-- Right Column: Live Detonation Terminal & Risk Score Gauge -->
-            <section class="panel-card glass-card">
-                <div class="panel-header">
-                    <h3><i class="fa-solid fa-gauge-high"></i> Threat Assessment & Telemetry</h3>
-                    <span class="panel-subtitle">Real-time risk scoring and MITRE ATT&CK mapping</span>
-                </div>
-
-                <!-- Risk Gauge & Verdict Card -->
-                <div class="verdict-summary-card" id="verdict-card">
-                    <div class="gauge-container">
-                        <svg class="gauge-svg" viewBox="0 0 120 120">
-                            <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
-                            <circle class="gauge-progress" id="gauge-circle" cx="60" cy="60" r="50"></circle>
-                        </svg>
-                        <div class="gauge-value-group">
-                            <span class="gauge-score" id="risk-score-display">0</span>
-                            <span class="gauge-max">/100</span>
-                        </div>
-                    </div>
-
-                    <div class="verdict-details">
-                        <div class="verdict-badge-wrapper">
-                            <span class="verdict-badge verdict-clean" id="verdict-badge">IDLE</span>
-                            <span class="slsa-badge" id="slsa-badge">SLSA Level 4</span>
-                        </div>
-                        <div class="verdict-meta">
-                            <div class="meta-item">
-                                <span class="meta-label">AST Scan Time:</span>
-                                <span class="meta-value" id="ast-time-display">--</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Sandbox Time:</span>
-                                <span class="meta-value" id="sandbox-time-display">--</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Build Decision:</span>
-                                <span class="meta-value decision-text" id="decision-display">WAITING</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Live WebSocket Terminal Feed -->
-                <div class="terminal-card">
-                    <div class="terminal-header">
-                        <div class="terminal-dots">
-                            <span class="dot dot-red"></span>
-                            <span class="dot dot-yellow"></span>
-                            <span class="dot dot-green"></span>
-                        </div>
-                        <span class="terminal-title"><i class="fa-solid fa-terminal"></i> LIVE SOC TELEMETRY FEED</span>
-                        <button type="button" class="btn-clear-term" onclick="clearTerminal(event)" title="Clear Terminal Logs">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </div>
-                    <div class="terminal-body" id="terminal-output">
-                        <div class="term-line sys-line">[SYSTEM] SupplyShield Gateway ready. Waiting for scan detonation payload...</div>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-
-        <!-- Threat Findings & MITRE ATT&CK Matrix Panel -->
-        <section class="panel-card glass-card full-width-panel margin-top-lg">
-            <div class="panel-header">
-                <h3><i class="fa-solid fa-triangle-exclamation"></i> MITRE ATT&CK Threat Findings & Evidence Ledger</h3>
-                <span class="panel-subtitle">Parsed AST taint traces and dynamic sandbox hooks</span>
-            </div>
-
-            <div class="findings-grid" id="findings-container">
-                <div class="empty-state">
-                    <i class="fa-solid fa-shield-heart"></i>
-                    <p>No active threats detected yet. Run a scan on code or package files to view AST taint paths and MITRE ATT&CK findings.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Audit History Ledger Table -->
-        <section class="panel-card glass-card full-width-panel margin-top-lg">
-            <div class="panel-header flex-between">
-                <div>
-                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Persistent Audit Scan History</h3>
-                    <span class="panel-subtitle">Stored SQLite audit trail and historical threat decisions</span>
-                </div>
-                <button type="button" class="btn-secondary" onclick="loadScanHistory(event)">
-                    <i class="fa-solid fa-arrows-rotate"></i> Refresh Audit History
-                </button>
-            </div>
-
-            <div class="table-responsive">
-                <table class="audit-table">
-                    <thead>
-                        <tr>
-                            <th>ID / Timestamp</th>
-                            <th>Target / File</th>
-                            <th>Risk Score</th>
-                            <th>Verdict</th>
-                            <th>SLSA Tier</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="history-table-body">
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">Loading persistent scan audit history...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Modal Drawer for Full Scan Report View -->
-        <div class="modal-backdrop hidden" id="report-modal">
-            <div class="modal-card glass-card">
-                <div class="modal-header">
-                    <h4><i class="fa-solid fa-file-contract"></i> Detailed Security Audit Report</h4>
-                    <button type="button" class="modal-close" onclick="closeModal(event)">&times;</button>
-                </div>
-                <div class="modal-body" id="modal-report-content">
-                    <!-- Dynamic Report Content -->
-                </div>
-            </div>
+      <!-- Nav Controls (Right side) -->
+      <div class="nav-controls">
+        <!-- Simple vs Technical View Toggle -->
+        <div class="view-mode-toggle" role="radiogroup" aria-label="View mode">
+          <button type="button" class="view-mode-btn active" id="btn-view-simple" onclick="setViewMode('simple')" role="radio" aria-checked="true" title="Beginner-friendly summary view">Simple</button>
+          <button type="button" class="view-mode-btn" id="btn-view-technical" onclick="setViewMode('technical')" role="radio" aria-checked="false" title="Full SOC details, MITRE codes, and telemetry">Technical</button>
         </div>
 
-        <!-- AI Remediation & Patch Modal -->
-        <div class="modal-backdrop hidden" id="ai-fix-modal">
-            <div class="modal-card glass-card" style="max-width: 800px;">
-                <div class="modal-header">
-                    <h4><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-cyan)"></i> SupplyShield AI Remediation & Secure Patch Generator</h4>
-                    <button type="button" class="modal-close" onclick="closeAIFixModal(event)">&times;</button>
-                </div>
-                <div class="modal-body" id="ai-fix-modal-body">
-                    <div class="text-center" style="padding: 2rem;">
-                        <i class="fa-solid fa-brain fa-spin fa-2x" style="color: var(--color-cyan)"></i>
-                        <p style="margin-top: 1rem;">Generating AI Security Patch & Refactoring Code...</p>
-                    </div>
-                </div>
-            </div>
+        <!-- API Health Indicator -->
+        <div class="status-pill" id="backend-status-pill" title="Gateway API connection status">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Online</span>
         </div>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <p>SupplyShield Security Gateway &bull; Designed by <strong>Team Rezzolver</strong> (Sakshi Sharma & Ravish Gupta) &bull; Built with FastAPI, AST Static Engine & Ephemeral Sandbox</p>
-        </footer>
+        <!-- Settings Button -->
+        <button type="button" class="icon-action-btn" id="btn-open-settings" onclick="openModal('settings-modal')" title="API Settings &amp; Authentication" aria-label="Settings">
+          <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        </button>
+
+        <!-- Help / Tour Button -->
+        <button type="button" class="icon-action-btn" id="btn-open-tour" onclick="startTour()" title="First-time Guided Tour" aria-label="Help and guided tour">
+          <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button type="button" class="icon-action-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light theme" aria-label="Toggle theme">
+          <i class="fa-solid fa-moon" id="theme-icon" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Error / Offline Banner ─────────────────────────────────────────── -->
+    <div id="offline-banner" class="alert-banner danger hidden" role="alert">
+      <span><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> <strong>Gateway Unreachable:</strong> Start the backend server with <code>uvicorn main:app --reload</code>, then click Retry.</span>
+      <button type="button" class="btn-secondary" onclick="checkBackendHealth()">Retry</button>
     </div>
 
-    <!-- Custom JS -->
-    <script src="app.js"></script>
+    <!-- ── Main Content Area ──────────────────────────────────────────────── -->
+    <main id="main-content" role="main">
+
+      <!-- ====================================================================
+           PAGE 1: SCAN VIEW
+           ==================================================================== -->
+      <div id="view-scan" class="page-view">
+
+        <!-- Beginner-Friendly Hero Section (Shown on clean/empty scan) -->
+        <section class="beginner-hero" id="beginner-hero-strip" aria-label="How SupplyShield Works">
+          <h1 class="hero-main-title">Check if a Python package is safe before you install it.</h1>
+          <p class="hero-subtitle">SupplyShield reads the code, runs it in an isolated room, and tells you if it tries anything dangerous.</p>
+
+          <!-- 3-Step How It Works Strip -->
+          <div class="how-it-works-strip">
+            <div class="step-card">
+              <div class="step-number" aria-hidden="true">1</div>
+              <div class="step-content">
+                <h4>Paste or upload</h4>
+                <p>Provide Python dependency code or upload a .py package file.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-number" aria-hidden="true">2</div>
+              <div class="step-content">
+                <h4>We analyze it</h4>
+                <p>Static AST compiler checks + isolated dynamic sandbox detonation.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-number" aria-hidden="true">3</div>
+              <div class="step-content">
+                <h4>Get a verdict &amp; next steps</h4>
+                <p>Plain English recommendation: safe to install or quarantine.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="why-matters-text">
+            <i class="fa-solid fa-shield" aria-hidden="true"></i> <strong>Why this matters:</strong> Attackers hide backdoors and secret stealers inside innocent-looking libraries. Checking first stops them.
+          </div>
+
+          <!-- Quick Try Preset CTAs -->
+          <div class="hero-cta-group">
+            <button type="button" class="btn-sample-safe" onclick="loadPresetSample('safe')">
+              <i class="fa-solid fa-check" aria-hidden="true"></i> Try a safe package
+            </button>
+            <button type="button" class="btn-sample-danger" onclick="loadPresetSample('stealer')">
+              <i class="fa-solid fa-bug" aria-hidden="true"></i> Try a malicious package
+            </button>
+            <button type="button" class="btn-secondary" onclick="openModal('explainer-modal')">
+              <i class="fa-solid fa-circle-info" aria-hidden="true"></i> What is this?
+            </button>
+          </div>
+        </section>
+
+        <!-- Scanner & Telemetry Grid -->
+        <div class="scanner-grid">
+          
+          <!-- Left Column: Input Panel -->
+          <section class="panel-container" aria-label="Package Input">
+            <div class="panel-header-row">
+              <h2 class="panel-header-title">
+                <i class="fa-solid fa-code" aria-hidden="true"></i> Source Code Input
+              </h2>
+              <span id="char-limit-indicator" class="text-muted" style="font-size: 0.78rem;">Max 200,000 chars</span>
+            </div>
+
+            <!-- Tabs: Paste Code vs Upload File -->
+            <div class="input-tabs" role="tablist">
+              <button type="button" class="tab-select-btn active" id="tab-btn-code" role="tab" aria-selected="true" onclick="switchInputTab('code')">
+                <i class="fa-solid fa-keyboard" aria-hidden="true"></i> Paste Code
+              </button>
+              <button type="button" class="tab-select-btn" id="tab-btn-file" role="tab" aria-selected="false" onclick="switchInputTab('file')">
+                <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i> Upload File (.py)
+              </button>
+            </div>
+
+            <!-- Tab 1: Code Text Area -->
+            <div id="tab-content-code">
+              <div class="editor-box">
+                <div class="editor-toolbar">
+                  <span><i class="fa-brands fa-python" aria-hidden="true"></i> input_sample.py</span>
+                  <label for="sample-preset-select" class="sr-only">Choose example</label>
+                  <select id="sample-preset-select" class="preset-dropdown" onchange="loadPresetFromDropdown(this.value)">
+                    <option value="" disabled selected>More examples...</option>
+                    <option value="safe">Safe Math Package</option>
+                    <option value="stealer">AWS Credential Stealer</option>
+                    <option value="backdoor">Obfuscated Dynamic Backdoor</option>
+                    <option value="reverse_shell">Reverse Shell Payload</option>
+                    <option value="dns_exfil">DNS Tunnel Exfiltration</option>
+                    <option value="typosquat">Homoglyph Typosquatting</option>
+                    <option value="cryptominer">Cryptominer Dropper</option>
+                  </select>
+                </div>
+                <textarea id="code-input" class="code-textarea" spellcheck="false" placeholder="# Paste Python code here or click 'Try a safe package' above..." oninput="updateCharCount()" aria-label="Python source code input"></textarea>
+                <div class="char-counter" id="char-counter-text">0 / 200,000 characters</div>
+              </div>
+
+              <button type="button" class="btn-primary" id="scan-code-btn" onclick="executeScan('code')" style="width: 100%;">
+                <i class="fa-solid fa-shield-virus" aria-hidden="true"></i> Scan code
+              </button>
+            </div>
+
+            <!-- Tab 2: Upload File Area -->
+            <div id="tab-content-file" class="hidden">
+              <div class="file-dropzone" id="file-dropzone" onclick="document.getElementById('file-upload-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)">
+                <div class="dropzone-icon"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i></div>
+                <p><strong>Click to browse</strong> or drag and drop a <code>.py</code> file</p>
+                <span class="text-muted" style="font-size: 0.78rem;">Maximum file size: 512 KB</span>
+                <input type="file" id="file-upload-input" accept=".py" style="display: none;" onchange="handleFilePicked(event)">
+                <div id="selected-file-badge" class="badge-tag badge-slsa hidden" style="margin-top: 12px;"></div>
+              </div>
+
+              <button type="button" class="btn-primary" id="scan-file-btn" onclick="executeScan('file')" disabled style="width: 100%;">
+                <i class="fa-solid fa-shield-virus" aria-hidden="true"></i> Scan file
+              </button>
+            </div>
+          </section>
+
+          <!-- Right Column: Real-Time Assessment & Stepper -->
+          <section class="panel-container" aria-label="Analysis Results">
+            <div class="panel-header-row">
+              <h2 class="panel-header-title">
+                <i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Threat Assessment
+              </h2>
+              <span id="scan-wait-estimate" class="text-muted" style="font-size: 0.78rem;">Max timeout: 10s</span>
+            </div>
+
+            <!-- 3-Stage Pipeline Stepper -->
+            <div class="stepper-container" id="pipeline-stepper" aria-label="Scanning Stepper">
+              <div class="step-node" id="step-node-ast">
+                <span class="step-indicator-circle">1</span>
+                <div>
+                  <strong>Reading the code</strong>
+                  <span class="text-muted" style="display: block; font-size: 0.7rem;">AST Static Parsing</span>
+                </div>
+              </div>
+              <div class="step-node" id="step-node-sandbox">
+                <span class="step-indicator-circle">2</span>
+                <div>
+                  <strong>Running in safe room</strong>
+                  <span class="text-muted" style="display: block; font-size: 0.7rem;">Dynamic Detonation</span>
+                </div>
+              </div>
+              <div class="step-node" id="step-node-score">
+                <span class="step-indicator-circle">3</span>
+                <div>
+                  <strong>Calculating risk</strong>
+                  <span class="text-muted" style="display: block; font-size: 0.7rem;">Risk Assessment</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Verdict Banner -->
+            <div class="verdict-banner clean" id="verdict-banner-box">
+              <div style="font-size: 1.5rem;" id="verdict-banner-icon" aria-hidden="true">
+                <i class="fa-solid fa-circle-check" style="color: var(--color-clean);"></i>
+              </div>
+              <div>
+                <div class="verdict-human-sentence" id="verdict-human-sentence">Ready for analysis. Paste code and press Scan.</div>
+                <div class="verdict-badges-row">
+                  <span class="badge-tag badge-clean" id="verdict-tech-badge">IDLE</span>
+                  <span class="badge-tag" id="verdict-plain-badge">Awaiting code</span>
+                  <span class="badge-tag badge-slsa" id="slsa-tier-badge">SLSA Level 4</span>
+                  <span class="text-muted" style="font-size: 0.75rem;" id="scan-duration-badge">Duration: --</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Risk Gauge & Metric Breakdown -->
+            <div class="gauge-overview">
+              <svg class="svg-gauge" viewBox="0 0 100 100" aria-label="Risk Score Gauge">
+                <circle class="gauge-track" cx="50" cy="50" r="42"></circle>
+                <circle class="gauge-fill" id="gauge-fill-circle" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+              </svg>
+              <div>
+                <div style="display: flex; align-items: baseline; gap: 4px;">
+                  <span class="score-text-val" id="risk-score-num">0</span>
+                  <span class="text-muted">/100</span>
+                </div>
+                <div class="gauge-legend">
+                  <span><strong>0–29:</strong> Low risk (Safe)</span>
+                  <span><strong>30–69:</strong> Medium risk (Suspicious)</span>
+                  <span><strong>70–100:</strong> High risk (Dangerous)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- "What Should I Do?" Box -->
+            <div class="action-box" id="action-guidance-box">
+              <h5><i class="fa-solid fa-list-check" aria-hidden="true"></i> What should I do?</h5>
+              <ul id="action-steps-list">
+                <li>Paste code or pick a sample above to evaluate package safety.</li>
+              </ul>
+            </div>
+
+          </section>
+        </div>
+
+        <!-- ── Findings Section ─────────────────────────────────────────────── -->
+        <section class="panel-container" id="findings-section" aria-label="Detected Findings">
+          <div class="panel-header-row">
+            <h2 class="panel-header-title">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Detected Security Findings
+              <span id="findings-count-pill" class="badge-tag badge-slsa" style="margin-left: 8px;">0 findings</span>
+            </h2>
+
+            <!-- Export Buttons -->
+            <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+              <button type="button" class="btn-secondary" onclick="exportReport('html')" id="btn-export-html" disabled title="Download print-ready HTML audit report">
+                <i class="fa-solid fa-file-code" aria-hidden="true"></i> HTML Report
+              </button>
+              <button type="button" class="btn-secondary" onclick="exportReport('json')" id="btn-export-json" disabled title="Download CI/CD JSON report">
+                <i class="fa-solid fa-file-lines" aria-hidden="true"></i> JSON
+              </button>
+              <button type="button" class="btn-secondary" onclick="copyCliCommand()" id="btn-copy-cli" title="Copy CLI scan command">
+                <i class="fa-solid fa-terminal" aria-hidden="true"></i> Copy CLI
+              </button>
+            </div>
+          </div>
+
+          <!-- Simple View Container (Default) -->
+          <div id="simple-view-findings">
+            <div id="simple-cards-container">
+              <p class="text-muted" style="padding: var(--space-4); text-align: center;">No findings to display yet.</p>
+            </div>
+          </div>
+
+          <!-- Technical View Container (Hidden in Simple Mode) -->
+          <div id="technical-view-findings" class="hidden">
+            <div style="overflow-x: auto;">
+              <table class="findings-table" aria-label="Technical findings table">
+                <thead>
+                  <tr>
+                    <th>Severity</th>
+                    <th>Rule ID</th>
+                    <th>Description</th>
+                    <th>Line</th>
+                    <th>MITRE ATT&amp;CK</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="technical-findings-tbody">
+                  <tr>
+                    <td colspan="6" class="text-muted" style="text-align: center; padding: var(--space-4);">No technical findings recorded yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Live Telemetry Terminal Feed -->
+            <div class="terminal-card">
+              <div class="terminal-header-bar">
+                <span><i class="fa-solid fa-terminal" aria-hidden="true"></i> Live SOC Telemetry Terminal</span>
+                <div class="terminal-actions">
+                  <button type="button" class="term-btn" onclick="toggleTerminalAutoScroll()" id="btn-autoscroll">Auto-scroll: ON</button>
+                  <button type="button" class="term-btn" onclick="copyTerminalLogs()">Copy</button>
+                  <button type="button" class="term-btn" onclick="clearTerminalLogs()">Clear</button>
+                </div>
+              </div>
+              <div class="terminal-log-area" id="terminal-logs-stream" role="log" aria-live="polite">
+                <div class="term-line-info">[SYSTEM] Gateway initialized. Ready for scan event telemetry...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ====================================================================
+           PAGE 2: HISTORY VIEW
+           ==================================================================== -->
+      <div id="view-history" class="page-view hidden">
+        <section class="panel-container" aria-label="Scan History">
+          <div class="panel-header-row">
+            <h2 class="panel-header-title">
+              <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Persistent Scan Audit History
+            </h2>
+            <button type="button" class="btn-secondary" onclick="loadHistoryData()">
+              <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i> Refresh
+            </button>
+          </div>
+
+          <!-- History Filter Bar -->
+          <div class="history-filters">
+            <input type="text" id="history-search-input" class="input-filter" placeholder="Search by package name or ID..." oninput="filterHistoryTable()" aria-label="Search scan history">
+            <select id="history-verdict-filter" class="input-filter" onchange="filterHistoryTable()" aria-label="Filter by verdict">
+              <option value="ALL">All Verdicts</option>
+              <option value="CLEAN">Clean Only</option>
+              <option value="SUSPICIOUS">Suspicious Only</option>
+              <option value="CRITICAL_MALICIOUS">Dangerous Only</option>
+            </select>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="findings-table" aria-label="Historical scans">
+              <thead>
+                <tr>
+                  <th>ID / Time</th>
+                  <th>Target Package</th>
+                  <th>Risk Score</th>
+                  <th>Verdict</th>
+                  <th>SLSA Tier</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-tbody">
+                <tr>
+                  <td colspan="6" class="text-muted" style="text-align: center; padding: var(--space-4);">Loading scan records...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ====================================================================
+           PAGE 3: ABOUT & GLOSSARY VIEW
+           ==================================================================== -->
+      <div id="view-about" class="page-view hidden">
+        <section class="panel-container" aria-label="About SupplyShield">
+          <div class="panel-header-row">
+            <h2 class="panel-header-title">
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> About SupplyShield
+            </h2>
+          </div>
+
+          <p style="margin-bottom: var(--space-4);">
+            <strong>SupplyShield</strong> is an autonomous software supply-chain security audit and detonation platform developed to defend against dependency confusion, malicious typosquats, and multi-stage backdoors before installation.
+          </p>
+
+          <h3 style="margin: var(--space-4) 0 var(--space-2);">Security Jargon Glossary</h3>
+          <div id="glossary-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-6);">
+            <!-- Populated from GLOSSARY dictionary -->
+          </div>
+
+          <h3 style="margin: var(--space-4) 0 var(--space-2);">Architecture Overview</h3>
+          <p class="text-secondary" style="font-size: 0.88rem; margin-bottom: var(--space-4);">
+            Combines compiler-level AST static inspection, CPython PEP 578 runtime audit hooks, ephemeral Docker containers, and composite risk scoring with SLSA provenance tiers.
+          </p>
+
+          <div class="action-box">
+            <h5><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Documented Architectural Limitations</h5>
+            <ul>
+              <li><strong>Weak Sandbox Fallback:</strong> In environments without Docker, host subprocess mode cannot isolate native C extensions or direct syscalls.</li>
+              <li><strong>Busy-Wait Logic Bombs:</strong> CPU-bound spinloops (<code>while time.time() &lt; t</code>) cannot be fast-forwarded and hit the 10-second watchdog SIGKILL.</li>
+              <li><strong>Compression Utilities:</strong> Legitimate packages using <code>gzip.decompress()</code> trigger baseline suspicion (Score: 40) to prevent unpacking blindspots.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+    </main>
+
+    <!-- ── Settings Modal ─────────────────────────────────────────────────── -->
+    <div class="modal-overlay hidden" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+      <div class="modal-dialog">
+        <div class="modal-header-bar">
+          <h3 id="settings-modal-title"><i class="fa-solid fa-gear" aria-hidden="true"></i> API Settings &amp; Authentication</h3>
+          <button type="button" class="modal-close-btn" onclick="closeModal('settings-modal')" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body-content">
+          <p class="text-secondary" style="margin-bottom: var(--space-3); font-size: 0.84rem;">
+            If your SupplyShield gateway is secured with <code>SUPPLYSHIELD_API_KEY</code>, enter it below. The key is stored in <strong>sessionStorage only</strong> and is never saved to disk.
+          </p>
+          <div style="margin-bottom: var(--space-4);">
+            <label for="api-key-input" style="display: block; font-weight: 600; font-size: 0.82rem; margin-bottom: 4px;">Gateway API Key</label>
+            <input type="password" id="api-key-input" class="input-filter" style="width: 100%;" placeholder="e.g. supplyshield-secret-token">
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+            <button type="button" class="btn-secondary" onclick="closeModal('settings-modal')">Cancel</button>
+            <button type="button" class="btn-primary" onclick="saveApiKey()">Save Key</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Onboarding / Tour Modal ────────────────────────────────────────── -->
+    <div class="modal-overlay hidden" id="tour-modal" role="dialog" aria-modal="true" aria-labelledby="tour-modal-title">
+      <div class="modal-dialog">
+        <div class="modal-header-bar">
+          <h3 id="tour-modal-title"><i class="fa-solid fa-compass" aria-hidden="true"></i> Welcome to SupplyShield</h3>
+          <button type="button" class="modal-close-btn" onclick="closeModal('tour-modal')" aria-label="Close tour">&times;</button>
+        </div>
+        <div class="modal-body-content" id="tour-step-content">
+          <!-- Populated dynamically by tour script -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ── "What Is This?" Explainer Modal ────────────────────────────────── -->
+    <div class="modal-overlay hidden" id="explainer-modal" role="dialog" aria-modal="true" aria-labelledby="explainer-modal-title">
+      <div class="modal-dialog">
+        <div class="modal-header-bar">
+          <h3 id="explainer-modal-title"><i class="fa-solid fa-circle-question" aria-hidden="true"></i> What is SupplyShield?</h3>
+          <button type="button" class="modal-close-btn" onclick="closeModal('explainer-modal')" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body-content">
+          <h4>The Problem: Software Supply-Chain Attacks</h4>
+          <p class="text-secondary" style="font-size: 0.84rem; margin: var(--space-2) 0 var(--space-4);">
+            When developers run <code>pip install library-name</code>, Python can run arbitrary code immediately during installation. Malicious actors publish typosquatted packages or backdoor existing libraries to steal AWS keys, deploy ransomware, or install reverse shells.
+          </p>
+
+          <h4>How SupplyShield Protects You</h4>
+          <ol class="text-secondary" style="font-size: 0.84rem; padding-left: 20px; margin-bottom: var(--space-4);">
+            <li><strong>Compiler AST Analysis:</strong> Checks the code structure for hidden commands, Base64 unpacking, and Trojan Source character tricks.</li>
+            <li><strong>Isolated Room (Sandbox):</strong> Runs the code in an isolated environment with synthetic decoy keys and PEP 578 audit hooks to see if it tries to steal credentials or reach the internet.</li>
+            <li><strong>Composite Verdict:</strong> Combines findings into an actionable verdict: "Looks safe" or "Dangerous: do not install".</li>
+          </ol>
+          <button type="button" class="btn-primary" onclick="closeModal('explainer-modal')" style="width: 100%;">Got it!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AI Secure Fix Modal ────────────────────────────────────────────── -->
+    <div class="modal-overlay hidden" id="ai-fix-modal" role="dialog" aria-modal="true" aria-labelledby="ai-fix-title">
+      <div class="modal-dialog" style="max-width: 750px;">
+        <div class="modal-header-bar">
+          <h3 id="ai-fix-title"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Automated Security Remediation</h3>
+          <button type="button" class="modal-close-btn" onclick="closeModal('ai-fix-modal')" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body-content" id="ai-fix-modal-body">
+          <p class="text-muted">Loading automated remediation...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Scan Details Report Modal ──────────────────────────────────────── -->
+    <div class="modal-overlay hidden" id="report-modal" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
+      <div class="modal-dialog" style="max-width: 800px;">
+        <div class="modal-header-bar">
+          <h3 id="report-modal-title"><i class="fa-solid fa-file-contract" aria-hidden="true"></i> Scan Audit Inspection</h3>
+          <button type="button" class="modal-close-btn" onclick="closeModal('report-modal')" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body-content" id="modal-report-content">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+    <footer style="margin-top: var(--space-8); padding: var(--space-4) 0; border-top: 1px solid var(--border-subtle); text-align: center; font-size: 0.78rem; color: var(--text-muted);">
+      SupplyShield v1.0.0 &bull; Built with FastAPI, AST Static Engine, Ephemeral Detonation &amp; PEP 578 Audit Hooks &bull; <a href="https://github.com/sakshisharma001/SupplyShield" target="_blank" rel="noopener" style="color: var(--color-accent); text-decoration: none;">GitHub Repository</a>
+    </footer>
+
+  </div>
+
+  <!-- JavaScript Controller -->
+  <script src="app.js"></script>
 </body>
 </html>

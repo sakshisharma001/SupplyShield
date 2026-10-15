@@ -169,3 +169,73 @@ Both received a score of 40 (`SUSPICIOUS`). This demonstrates the classic securi
 1. **CPU-bound busy wait:** Instead of `time.sleep()`, use a `while time.time() < target: pass` spinloop. *Counter in v2:* Bytecode rewriting to patch `time.time()` or inject execution count limits.
 2. **Native C-Extensions:** Packaging malicious logic inside a compiled `.so` or `.pyd` wheel. *Counter in v2:* Enforce mandatory Docker container isolation and integrate native ELF/PE binary analysis (e.g., YARA and syscall tracing via eBPF).
 3. **Environment-Conditional triggers:** Checking specific production hostnames before detonating. *Counter in v2:* Symbolic execution / multi-path execution to explore conditional branches dynamically.
+
+---
+
+## Section 6: Web Gateway, Security & Production Scaling
+
+### Q28: What is the difference between WSGI and ASGI, and why is ASGI required for SupplyShield?
+**Answer:** WSGI (Web Server Gateway Interface, e.g. Flask/Gunicorn) is synchronous and blocking; a single worker thread handles one request at a time. ASGI (Asynchronous Server Gateway Interface, e.g. FastAPI/Uvicorn) runs an `asyncio` event loop. Because SupplyShield broadcasts real-time telemetry over WebSockets (`/ws/telemetry`) while running asynchronous subprocess detonations, WSGI would exhaust thread pools and lock the server. ASGI allows hundreds of concurrent WebSocket subscribers and background scans on a single lightweight process.
+- **Code Reference:** FastAPI initialization in [main.py](file:///backend/main.py#L133-L160) and [websocket_feed.py](file:///backend/api/websocket_feed.py).
+
+### Q29: What is SLSA (Supply-chain Levels for Software Artifacts) and how is it assigned?
+**Answer:** SLSA is an OpenSSF security framework that establishes provenance and build integrity standards. SupplyShield maps its composite findings into SLSA assurance tiers:
+- **SLSA Level 4:** Verified clean source (Score < 30) with reproducible AST inspection and deterministic detonation.
+- **SLSA Level 2:** Moderate risk (Score 30–69) requiring human review and verification of third-party dependencies.
+- **SLSA Level 0 (Quarantine):** Critical risk (Score >= 70) indicating untrusted build provenance, credential theft, or backdoor vectors.
+- **Code Reference:** SLSA mapping in [risk_scorer.py](file:///backend/engine/risk_scorer.py#L80-L105).
+
+### Q30: How was Stored XSS prevented in the HTML report generator and dashboard?
+**Answer:** Malware code snippets and package names often contain malicious HTML/JavaScript vectors (e.g. `<script>alert(1)</script>` inside docstrings or variable names). 
+1. In the backend [report_generator.py](file:///backend/engine/report_generator.py#L75-L115), every finding description, snippet, and target file is sanitized using Python's `html.escape(quote=True)`.
+2. In the frontend [app.js](file:///frontend/app.js), all dynamic content is rendered using `escapeHtml()` or assigned via `textContent`. Zero untrusted strings are interpolated directly into raw `innerHTML`.
+- **Code Reference:** Sanitization in [report_generator.py](file:///backend/engine/report_generator.py#L22-L35) and frontend unit tests in [frontend.test.js](file:///tests_frontend/frontend.test.js).
+
+### Q31: How would you scale SupplyShield to scan thousands of packages concurrently in an enterprise?
+**Answer:**
+1. **Decouple API from Detonation Workers:** Introduce a distributed task queue (Celery or ARQ) backed by Redis or RabbitMQ.
+2. **Ephemeral Detonation Cluster:** Run Docker containers via a Kubernetes Job controller or Nomad cluster, dispatching detonations to isolated worker nodes with strict gVisor (runsc) or Kata Containers kernel sandboxing.
+3. **Distributed Rate Limiting & Storage:** Replace the in-memory sliding window rate limiter with Redis-based token buckets, and migrate SQLite to PostgreSQL with read replicas.
+- **Code Reference:** Documented in [LIMITATIONS.md](file:///LIMITATIONS.md#L85-L95).
+
+### Q32: Why did we move away from the traditional 0.4 static / 0.6 dynamic linear formula?
+**Answer:** A fixed linear weighting (`0.4 * static + 0.6 * dynamic`) suffers from a critical flaw: **score dilution**. If an offline sandbox runs without internet access (dynamic score = 0), a confirmed static backdoor (static score = 100) gets calculated as `0.4 * 100 + 0.6 * 0 = 40`, reducing a critical Trojan from `CRITICAL_MALICIOUS` to `SUSPICIOUS`. Our weighted maximum formula (`max * 0.75 + min * 0.25`) with strict severity floors guarantees that any confirmed CRITICAL threat produces a final score >= 70, completely eliminating score dilution.
+- **Code Reference:** [risk_scorer.py](file:///backend/engine/risk_scorer.py#L52-L74).
+
+### Q33: How does the gateway protect itself against parser Denial-of-Service (DoS) and oversized payloads?
+**Answer:**
+1. **HTTP 413 Payload Enforcer:** The `/api/scan/code` endpoint strictly enforces `MAX_CODE_LENGTH_CHARS = 200,000`. Any payload exceeding this character limit is rejected immediately with HTTP 413 before AST parsing begins.
+2. **Upload Size Limit:** Package file uploads (`/api/scan/package`) are restricted to 512 KB.
+3. **Sliding Window Rate Limiter:** The gateway limits unauthenticated client IPs to 30 requests per minute.
+- **Code Reference:** [routes_scan.py](file:///backend/api/routes_scan.py#L30-L55) and [main.py](file:///backend/main.py#L65-L95).
+
+### Q34: What is the rationale behind the Simple vs. Technical view toggle in the UI?
+**Answer:** A recruiter or first-time viewer should not have to understand AST compiler nodes or MITRE codes to know if a library is safe. The **Simple View** prioritizes a human sentence (e.g. *"Do not install this. It tries to steal cloud secrets."*), a traffic-light verdict, and a *"What should I do?"* action box. The **Technical View** satisfies deep security analysts and viva examiners by revealing the full findings table, raw JSON, MITRE ATT&CK technique links, and live telemetry stream.
+- **Code Reference:** [app.js](file:///frontend/app.js) and [FRONTEND.md](file:///FRONTEND.md).
+
+### Q35: How does the WebSocket feed handle connection drops or server restarts?
+**Answer:** The frontend controller implements **exponential backoff reconnection** (delays of 1s, 2s, 4s, 8s, up to 16s). If the backend is restarted or the network disconnects, the UI updates the connection dot to offline, displays the friendly retry banner, and automatically re-establishes the telemetry stream without requiring a manual page refresh.
+- **Code Reference:** `initWebSocket` in [app.js](file:///frontend/app.js).
+
+---
+
+## Section 7: Questions Where the Honest Answer is "This is a Limitation"
+
+### Q36: Can SupplyShield inspect native C extensions or shared libraries (.so / .pyd)?
+**Answer:** **No, this is an honest architectural limitation.** SupplyShield is a pure Python AST and CPython runtime analysis engine. If an attacker places their malicious shellcode inside a compiled `.pyd` or `.so` binary, the AST compiler cannot parse machine code instructions. We document this limitation explicitly in [LIMITATIONS.md](file:///LIMITATIONS.md#L63-L70). In a v2 enterprise architecture, this would require pairing SupplyShield with YARA rules, Ghidra decompilation, and eBPF kernel syscall monitors.
+
+### Q37: What happens if a malicious package executes a CPU spinloop instead of time.sleep()?
+**Answer:** **The sandbox watchdog kills the process, and this is a documented limitation.** Our dynamic harness skips `time.sleep()` via monkeypatching. But if an attacker writes `start = time.time(); while time.time() - start < 60: pass`, the CPU spinloop cannot be fast-forwarded. After 10.0 seconds, the watchdog triggers a SIGKILL (`TIMEOUT_KILLED`). We flag this as MITRE `T1497.003 (Sandbox Evasion: Time Based Evasion)`, but we honestly admit that the subsequent payload never detonates.
+- **Code Reference:** Documented in [LIMITATIONS.md](file:///LIMITATIONS.md#L32-L48).
+
+### Q38: How can an intelligent adversary bypass your synthetic Canary tripwire?
+**Answer:** **By inspecting file timestamps, mock credentials, or environment paths before reading.** Our canary plants dummy credentials at `~/.aws/credentials`. A sophisticated attacker can inspect whether the operating system has actual AWS CLI binaries installed, check if file modification times match system boot time, or verify whether network traffic is allowed before reading. If the malware detects it is in a sandbox, it simply exits quietly without tripping the canary.
+- **Code Reference:** [LIMITATIONS.md](file:///LIMITATIONS.md#L50-L62).
+
+### Q39: Can SupplyShield detect targeted malware that only detonates on a specific company's server?
+**Answer:** **Dynamically no, but statically yes.** If malware checks `if socket.gethostname() != "target-bank-prod": return`, dynamic detonation will observe benign behavior because the sandbox hostname will not match. However, SupplyShield's static AST engine scans **all branches** of the code regardless of conditions. If the inactive branch imports `socket` or accesses `/etc/shadow`, AST analysis flags the threat even if dynamic detonation was evaded.
+
+### Q40: What happens if an attacker wraps malicious code in 5 nested layers of Base64 encoding?
+**Answer:** **Layers 1, 2, and 3 are decoded and analyzed; layers 4 and 5 are not parsed into AST nodes.** To prevent parser Denial-of-Service and decompression zip bombs, SupplyShield enforces `MAX_DECODE_DEPTH = 3`. While our high Shannon entropy detector (`SEC-ENT-006`) will still raise an alert for suspicious high-entropy strings, the deepest inner logic is not unpacked. This is a deliberate, documented trade-off between parser safety and analysis depth.
+- **Code Reference:** [ast_analyzer.py](file:///backend/engine/ast_analyzer.py#L346-L387) and [LIMITATIONS.md](file:///LIMITATIONS.md#L72-L84).
+
